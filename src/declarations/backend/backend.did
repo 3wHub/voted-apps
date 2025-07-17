@@ -1,0 +1,7 @@
+service: () -> {
+    createNote: (text, text) -> (record {id:text; title:text; content:text; createdAt:text; updatedAt:text});
+    deleteNote: (text) -> (opt record {id:text; title:text; content:text; createdAt:text; updatedAt:text});
+    getNote: (text) -> (opt record {id:text; title:text; content:text; createdAt:text; updatedAt:text}) query;
+    getNotes: () -> (vec record {id:text; title:text; content:text; createdAt:text; updatedAt:text}) query;
+    updateNote: (text, text, text) -> (opt record {id:text; title:text; content:text; createdAt:text; updatedAt:text});
+}
