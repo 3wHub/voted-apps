@@ -11,16 +11,17 @@ export default function Footer() {
           </Link>
 
           <ul className="flex flex-wrap items-center font-medium p-4 md:p-0 mt-4 md:space-x-8 rtl:space-x-reverse md:flex-row md:mt-0">
-            <li>
-              <Link to="/" className="text-gray-700 hover:text-orange-600 px-3 py-2 text-lg font-medium">
-                Home
-              </Link>
-            </li>
-            <li>
-              <Link to="/vote" className="text-gray-700 hover:text-orange-600 px-3 py-2 text-lg font-medium">
-                Vote
-              </Link>
-            </li>
+            <Link to="/" className="text-gray-700 hover:text-orange-600 px-3 py-2 text-lg font-medium">
+              Home
+            </Link>
+
+            <Link to="/about" className="text-gray-700 hover:text-orange-600 px-3 py-2 text-lg font-medium">
+              About
+            </Link>
+
+            <Link to="/vote" className="text-gray-700 hover:text-orange-600 px-3 py-2 text-lg font-medium">
+              Vote
+            </Link>
           </ul>
         </div>
 
