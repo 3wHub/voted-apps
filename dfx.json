@@ -4,7 +4,7 @@
       "type": "azle",
       "main": "src/backend/index.ts",
       "declarations": {
-        "output": "../declarations/backend",
+        "output": "src/declarations/backend",
         "node_compatibility": true
       }
     },

@@ -3,9 +3,9 @@ import type { ActorMethod } from '@dfinity/agent';
 import type { IDL } from '@dfinity/candid';
 
 export interface _SERVICE {
-  'login': ActorMethod<[], string>,
-  'logout': ActorMethod<[], string>,
-  'whoAmI': ActorMethod<[], string>,
+  'login' : ActorMethod<[], undefined>,
+  'logout' : ActorMethod<[], undefined>,
+  'whoAmI' : ActorMethod<[], undefined>,
 }
 export declare const idlFactory: IDL.InterfaceFactory;
 export declare const init: (args: { IDL: typeof IDL }) => IDL.Type[];
