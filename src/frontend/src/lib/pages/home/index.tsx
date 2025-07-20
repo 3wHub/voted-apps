@@ -1,3 +1,5 @@
+import { NavLink } from 'react-router-dom';
+
 interface Poll {
     id: number;
     question: string;
@@ -64,12 +66,12 @@ export default function Home() {
                             <span className="text-sm text-gray-500">
                                 {poll.totalVotes} votes
                             </span>
-                            <button
-                                type="button"
+                            <NavLink
+                                to="/votes"
                                 className="text-white bg-gray-800 hover:bg-gray-900 focus:outline-none focus:ring-4 focus:ring-gray-300 font-medium rounded-lg text-sm px-5 py-3"
                             >
                                 Vote
-                            </button>
+                            </NavLink>
                         </div>
                     </div>
                 ))}

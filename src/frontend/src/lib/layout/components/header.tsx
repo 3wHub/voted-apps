@@ -7,16 +7,16 @@ export default function Header() {
         <div className="flex justify-between items-center">
           <div className="flex items-center">
             <NavLink to="/" className="flex items-center">
-              <img src="./public/voted.png" className="h-17" alt="voteD Logo" />
-              <span className="self-center text-2xl font-semibold whitespace-nowrap">VoteD</span>
+              <img src="./public/voted.png" className="h-15" alt="voteD Logo" />
+              <span className="self-center ml-2 text-2xl font-semibold whitespace-nowrap">VoteD</span>
             </NavLink>
           </div>
           <nav className="flex space-x-8">
             <NavLink
               to="/"
               className={({ isActive }) =>
-                `px-3 py-2 rounded-md text-sm font-medium ${isActive
-                  ? 'bg-indigo-100 text-indigo-700'
+                `px-3 py-2 rounded-md text-lg font-medium ${isActive
+                  ? 'bg-orange-100 text-orange-700'
                   : 'text-gray-700 hover:bg-gray-100'
                 }`
               }
@@ -24,10 +24,10 @@ export default function Header() {
               Home
             </NavLink>
             <NavLink
-              to="/vote"
+              to="/votes-create"
               className={({ isActive }) =>
-                `px-3 py-2 rounded-md text-sm font-medium ${isActive
-                  ? 'bg-indigo-100 text-indigo-700'
+                `px-3 py-2 rounded-md text-lg font-medium ${isActive
+                  ? 'bg-orange-100 text-orange-700'
                   : 'text-gray-700 hover:bg-gray-100'
                 }`
               }
@@ -35,7 +35,7 @@ export default function Header() {
               Vote
             </NavLink>
 
-            <button type="button" className="block  focus:outline-none text-white bg-orange-500 hover:bg-orange-600 focus:ring-4 focus:ring-orange-700 font-medium rounded-lg px-5 py-2">Login</button>
+            <button type="button" className="block  focus:outline-none text-white bg-orange-500 hover:bg-orange-600 focus:ring-4 focus:ring-orange-700 font-medium rounded-lg px-5 py-1">Login</button>
 
           </nav>
         </div>
