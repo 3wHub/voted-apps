@@ -1,16 +1,19 @@
-import type { ReactNode } from 'react';
-import Header from '@/lib/layout/components/header';
-import Footer from '@/lib/layout/components/footer';
+import { Outlet } from 'react-router-dom';
+import { ReactNode } from 'react';
+import Header from './components/header';
+import Footer from './components/footer';
 
-type LayoutProps = {
-  children: ReactNode;
-};
+interface LayoutProps {
+  children?: ReactNode;
+}
 
 export default function Layout({ children }: LayoutProps) {
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
-      <main className="flex-grow">{children}</main>
+      <main className="flex flex-grow max-w-screen justify-center my-10">
+        <Outlet />
+      </main>
       <Footer />
     </div>
   );
