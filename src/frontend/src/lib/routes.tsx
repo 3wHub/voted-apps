@@ -12,7 +12,13 @@ export const routes: RouteObject[] = [
     children: [
       { index: true, element: <Home /> },
       { path: 'about', element: <About /> },
-      { path: 'votes', element: <Vote /> },
+      { 
+        path: 'votes',
+        children: [
+          { index: true, element: <Vote /> }, 
+          { path: ':id', element: <Vote /> },
+        ]
+      },
       { path: 'votes-create', element: <CreateVote /> },
     ],
   },

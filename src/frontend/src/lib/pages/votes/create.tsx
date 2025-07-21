@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import FormInput from '@/lib/pages/components/FormInput';
 import DateTimePicker from '@/lib/pages/components/DateTimePicker';
+import Container from '@/lib/pages/components/Container';
+
 
 export default function CreateVote() {
     const [title, setTitle] = useState('');
@@ -59,7 +61,7 @@ export default function CreateVote() {
     };
 
     return (
-        <div className="max-w-2xl md:min-w-md lg:min-w-lg mx-auto p-4 shadow-lg bg-white rounded-ms">
+        <Container>
             <h1 className="text-2xl font-bold mb-6">Create New Voting</h1>
             <form onSubmit={handleSubmit} className="space-y-6">
                 {/* Title */}
@@ -208,7 +210,7 @@ export default function CreateVote() {
                     </button>
                 </div>
             </form>
-        </div>
+        </Container>
     );
 }
 

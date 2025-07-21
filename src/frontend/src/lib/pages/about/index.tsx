@@ -1,8 +1,9 @@
 import { Link } from 'react-router-dom';
+import Container from '@/lib/pages/components/Container';
 
 export default function About() {
   return (
-    <div className="max-w-4xl mx-auto px-4 py-12">
+    <Container>
       <header className="text-center mb-12">
         <h1 className="text-4xl font-bold text-gray-900 mb-4">About Voted</h1>
         <p className="text-xl text-gray-600 max-w-2xl mx-auto">
@@ -84,6 +85,6 @@ export default function About() {
           </svg>
         </Link>
       </section>
-    </div>
+    </Container>
   );
 }
