@@ -42,13 +42,6 @@ export default function CreateVote() {
         }
     };
 
-    const getCombinedDateTime = (date: Date, time: string): Date => {
-        const [h, m] = time.split(':').map(Number);
-        const newDate = new Date(date);
-        newDate.setHours(h);
-        newDate.setMinutes(m);
-        return newDate;
-    };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -70,11 +63,8 @@ export default function CreateVote() {
                 tags
             );
 
-            console.log('Poll created:', newPoll);
-
-            navigate(`/vote/${newPoll.id}`);
+            navigate(`/votes/${newPoll.id}`);
         } catch (err) {
-            console.error('Error creating poll:', err);
             setError('Failed to create poll. Please try again.');
         } finally {
             setIsSubmitting(false);
