@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import FormInput from '@/lib/pages/components/FormInput';
 import DateTimePicker from '@/lib/pages/components/DateTimePicker';
 import Container from '@/lib/pages/components/Container';
-
+import { createPoll } from '@/lib/api/api';
 
 export default function CreateVote() {
+    const navigate = useNavigate();
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
     const [options, setOptions] = useState(['', '']);
@@ -19,6 +20,8 @@ export default function CreateVote() {
     });
     const [startTime, setStartTime] = useState('00:00');
     const [endTime, setEndTime] = useState('23:59');
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
     const updateOption = (index: number, value: string) => {
         const updated = [...options];
@@ -47,22 +50,45 @@ export default function CreateVote() {
         return newDate;
     };
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        const voteData = {
-            title,
-            description,
-            options: options.filter(opt => opt.trim()),
-            tags,
-            startDate: getCombinedDateTime(startDate, startTime),
-            endDate: getCombinedDateTime(endDate, endTime),
-        };
-        console.log('Submitting:', voteData);
+        setError(null);
+        setIsSubmitting(true);
+
+        try {
+            const pollOptions = options
+                .filter(opt => opt.trim())
+                .map((opt, index) => ({
+                    id: `opt_${index}_${Date.now()}`,
+                    label: opt.trim(),
+                    votes: 0
+                }));
+
+            const newPoll = await createPoll(
+                title.trim(),
+                pollOptions,
+                tags
+            );
+
+            console.log('Poll created:', newPoll);
+
+            navigate(`/vote/${newPoll.id}`);
+        } catch (err) {
+            console.error('Error creating poll:', err);
+            setError('Failed to create poll. Please try again.');
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     return (
         <Container>
             <h1 className="text-2xl font-bold mb-6">Create New Voting</h1>
+            {error && (
+                <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
+                    {error}
+                </div>
+            )}
             <form onSubmit={handleSubmit} className="space-y-6">
                 {/* Title */}
                 <FormInput
@@ -105,10 +131,9 @@ export default function CreateVote() {
                                     onClick={() => removeOption(index)}
                                     className="ml-2 text-red-500 hover:text-red-700"
                                 >
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" className="size-6">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="size-6">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
                                     </svg>
-
                                 </button>
                             )}
                         </div>
@@ -166,8 +191,7 @@ export default function CreateVote() {
                             if (date) setStartDate(date);
                         }}
                         time={startTime}
-                        onTimeChange={(e) => setEndTime(e.target.value)}
-
+                        onTimeChange={(e) => setStartTime(e.target.value)}
                     />
                     <DateTimePicker
                         label="End Date"
@@ -176,25 +200,9 @@ export default function CreateVote() {
                             if (date) setEndDate(date);
                         }}
                         time={endTime}
-                        onTimeChange={(e) => (setEndTime(e.target.value))}
+                        onTimeChange={(e) => setEndTime(e.target.value)}
                         minDate={startDate}
                     />
-                </div>
-
-                {/* Link (placeholder only) */}
-                <div>
-                    <label className="block text-sm font-medium text-gray-700">Share Link (after creation)</label>
-                    <div className="mt-1 flex rounded-md shadow-sm">
-                        <span className="inline-flex text-sm items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500">
-                            Link:
-                        </span>
-                        <input
-                            type="text"
-                            readOnly
-                            value={`${window.location.origin}/vote/123`}
-                            className="flex-1 block w-full px-3 text-sm py-1 rounded-none rounded-r-md border-gray-300 focus:ring-orange-500 focus:border-orange-500 border"
-                        />
-                    </div>
                 </div>
 
                 {/* Actions */}
@@ -204,14 +212,13 @@ export default function CreateVote() {
                     </Link>
                     <button
                         type="submit"
-                        className="px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-orange-600 hover:bg-orange-700"
+                        disabled={isSubmitting}
+                        className={`px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white ${isSubmitting ? 'bg-orange-400' : 'bg-orange-600 hover:bg-orange-700'}`}
                     >
-                        Create Voting
+                        {isSubmitting ? 'Creating...' : 'Create Voting'}
                     </button>
                 </div>
             </form>
         </Container>
     );
 }
-
-

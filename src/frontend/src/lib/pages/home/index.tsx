@@ -1,75 +1,84 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import Container from '@/lib/pages/components/Container';
+import { getAllPolls } from '@/lib/api/api';
+
+interface PollOption {
+    id: string;
+    label: string;
+    votes: number;
+}
 
 interface Poll {
-    id: number;
+    id: string;
     question: string;
     tags: string[];
     totalVotes: number;
     created_at: string;
+    updated_at: string;
+    options: PollOption[];
 }
 
 export default function Home() {
     const [searchTerm, setSearchTerm] = useState('');
-    const [selectedTag, setSelectedTag] = useState<string>('');
-    const [dateFilter, setDateFilter] = useState<string>('');
+    const [selectedTags, setSelectedTags] = useState<string[]>([]);
+    const [dateFilter, setDateFilter] = useState('');
+    const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'mostVotes'>('newest');
+    const [polls, setPolls] = useState<Poll[]>([]);
+    const [loading, setLoading] = useState(true);
 
-    const data: Poll[] = [
-        {
-            id: 1,
-            question: "Siapa presiden Indonesia terbaik sepanjang sejarah peradaban manusia modern?",
-            tags: ["Politik", "Sejarah", "Kepemimpinan"],
-            totalVotes: 245,
-            created_at: "2025-07-15"
-        },
-        {
-            id: 2,
-            question: "Aplikasi mobile banking apa yang paling aman menurut Anda?",
-            tags: ["Teknologi", "Keuangan", "Keamanan"],
-            totalVotes: 189,
-            created_at: "2025-07-18"
-        },
-        {
-            id: 3,
-            question: "Destinasi wisata mana yang paling ingin Anda kunjungi di Indonesia?",
-            tags: ["Travel", "Budaya", "Alam"],
-            totalVotes: 312,
-            created_at: "2025-07-20"
-        },
-        {
-            id: 4,
-            question: "Makanan tradisional Indonesia mana yang paling Anda sukai?",
-            tags: ["Kuliner", "Budaya"],
-            totalVotes: 421,
-            created_at: "2025-07-10"
-        },
-        {
-            id: 5,
-            question: "Platform e-commerce mana yang paling sering Anda gunakan?",
-            tags: ["Teknologi", "Belanja"],
-            totalVotes: 376,
-            created_at: "2025-07-19"
-        }
-    ];
+    useEffect(() => {
+        const fetchPolls = async () => {
+            try {
+                const result = await getAllPolls();
+                setPolls(result);
+            } catch (error) {
+                console.error('Failed to fetch polls:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
 
-    const allTags = Array.from(new Set(data.flatMap(poll => poll.tags)));
+        fetchPolls();
+    }, []);
 
-    const filteredPolls = data.filter(poll => {
-        const matchesSearch = poll.question.toLowerCase().includes(searchTerm.toLowerCase());
-        const matchesTag = selectedTag ? poll.tags.includes(selectedTag) : true;
-        const matchesDate = dateFilter ? poll.created_at === dateFilter : true;
+    const allTags = Array.from(new Set(polls.flatMap((poll) => poll.tags)));
 
-        return matchesSearch && matchesTag && matchesDate;
-    });
+    const toggleTag = (tag: string) => {
+        setSelectedTags((prev) =>
+            prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
+        );
+    };
+
+    const filteredPolls = polls
+        .filter((poll) => {
+            const matchesSearch = poll.question.toLowerCase().includes(searchTerm.toLowerCase());
+            const matchesTags =
+                selectedTags.length === 0 || selectedTags.every((tag) => poll.tags.includes(tag));
+            const matchesDate = dateFilter
+                ? new Date(poll.created_at).toISOString().slice(0, 10) === dateFilter
+                : true;
+
+            return matchesSearch && matchesTags && matchesDate;
+        })
+        .sort((a, b) => {
+            switch (sortBy) {
+                case 'newest':
+                    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+                case 'oldest':
+                    return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+                case 'mostVotes':
+                    return b.totalVotes - a.totalVotes;
+            }
+        });
 
     return (
         <Container>
-            {/* Search and Filter Section */}
+            {/* Filters */}
             <div className="mb-8 p-4 bg-white rounded-lg shadow-lg border border-gray-200">
                 <h2 className="text-xl font-semibold mb-4">Filter Polls</h2>
 
-                {/* Search by title */}
+                {/* Search */}
                 <div className="mb-4">
                     <label htmlFor="search" className="block text-sm font-medium text-gray-700 mb-1">
                         Search
@@ -84,26 +93,27 @@ export default function Home() {
                     />
                 </div>
 
-                {/* Filter by tag */}
+                {/* Tags */}
                 <div className="mb-4">
-                    <label htmlFor="tag-filter" className="block text-sm font-medium text-gray-700 mb-1">
-                        Tag
-                    </label>
-                    <select
-                        id="tag-filter"
-                        className="w-full text-sm p-2 border border-gray-300 rounded-md"
-                        value={selectedTag}
-                        onChange={(e) => setSelectedTag(e.target.value)}
-                    >
-                        <option value="">All Tags</option>
-                        {allTags.map(tag => (
-                            <option key={tag} value={tag}>{tag}</option>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Tags</label>
+                    <div className="flex flex-wrap gap-2">
+                        {allTags.map((tag) => (
+                            <button
+                                key={tag}
+                                onClick={() => toggleTag(tag)}
+                                className={`px-3 py-1.5 text-xs rounded-full border ${selectedTags.includes(tag)
+                                        ? 'bg-blue-100 text-blue-800 border-blue-400'
+                                        : 'bg-gray-100 text-gray-800 border-gray-300'
+                                    }`}
+                            >
+                                {tag}
+                            </button>
                         ))}
-                    </select>
+                    </div>
                 </div>
 
-                {/* Filter by date */}
-                <div>
+                {/* Date Filter */}
+                <div className="mb-4">
                     <label htmlFor="date-filter" className="block text-sm font-medium text-gray-700 mb-1">
                         Date
                     </label>
@@ -123,39 +133,72 @@ export default function Home() {
                         </button>
                     )}
                 </div>
+
+                {/* Sort Filter */}
+                <div className="mb-4">
+                    <label htmlFor="sort" className="block text-sm font-medium text-gray-700 mb-1">
+                        Sort By
+                    </label>
+                    <select
+                        id="sort"
+                        className="w-full text-sm p-2 border border-gray-300 rounded-md"
+                        value={sortBy}
+                        onChange={(e) => setSortBy(e.target.value as any)}
+                    >
+                        <option value="newest">Newest</option>
+                        <option value="oldest">Oldest</option>
+                        <option value="mostVotes">Most Votes</option>
+                    </select>
+                </div>
+
+                {/* Clear All Filters */}
+                <div className="mt-4">
+                    <button
+                        className="text-sm text-red-500 hover:underline"
+                        onClick={() => {
+                            setSearchTerm('');
+                            setSelectedTags([]);
+                            setDateFilter('');
+                            setSortBy('newest');
+                        }}
+                    >
+                        Clear all filters
+                    </button>
+                </div>
             </div>
 
             {/* Polls List */}
             <div className="grid grid-cols-1 gap-5">
-                {filteredPolls.length > 0 ? (
+                {loading ? (
+                    <div className="text-center py-10 text-gray-500">Loading polls...</div>
+                ) : filteredPolls.length > 0 ? (
                     filteredPolls.map((poll) => (
-                        <div key={poll.id} className="block p-6 border border-gray-200 rounded-lg shadow-sm hover:bg-gray-50">
+                        <div
+                            key={poll.id}
+                            className="block p-6 border border-gray-200 rounded-lg shadow-sm hover:bg-gray-50 bg-white"
+                        >
                             <span className="text-xs text-gray-500">
                                 {new Date(poll.created_at).toLocaleDateString()}
                             </span>
                             <div className="flex justify-between items-start">
-                                <h5 className="mb-3 text-xl font-light text-gray-900">
-                                    {poll.question}
-                                </h5>
+                                <h5 className="mb-3 text-xl font-light text-gray-900">{poll.question}</h5>
                             </div>
 
-                            <div className="mb-4">
-                                {poll.tags.map((category, index) => (
+                            <div className="mb-4 flex flex-wrap gap-2">
+                                {poll.tags.map((tag, index) => (
                                     <button
                                         key={index}
                                         type="button"
-                                        className="py-1.5 px-3 me-2 mb-2 text-xs font-medium rounded-full text-gray-900 bg-white border border-gray-200 hover:bg-gray-100"
-                                        onClick={() => setSelectedTag(category)}
+                                        className="py-1.5 px-3 text-xs font-medium rounded-full text-gray-900 bg-white border border-gray-200 hover:bg-gray-100"
+                                        onClick={() => toggleTag(tag)}
                                     >
-                                        {category}
+                                        {tag}
                                     </button>
                                 ))}
                             </div>
 
                             <div className="flex justify-between items-center">
-                                <span className="text-sm text-gray-500">
-                                    {poll.totalVotes} votes
-                                </span>
+                                <span className="text-sm text-gray-500">{poll.totalVotes} votes</span>
                                 <NavLink
                                     to={`/votes/${poll.id}`}
                                     className="text-white bg-gray-800 hover:bg-gray-900 focus:outline-none focus:ring-4 focus:ring-gray-300 font-medium rounded-lg text-sm px-5 py-2.5"
@@ -168,16 +211,6 @@ export default function Home() {
                 ) : (
                     <div className="text-center py-10">
                         <p className="text-gray-500">No polls match your filters.</p>
-                        <button
-                            className="mt-2 text-blue-500 hover:text-blue-700"
-                            onClick={() => {
-                                setSearchTerm('');
-                                setSelectedTag('');
-                                setDateFilter('');
-                            }}
-                        >
-                            Clear all filters
-                        </button>
                     </div>
                 )}
             </div>

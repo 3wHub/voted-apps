@@ -1,6 +1,7 @@
 import { useParams } from 'react-router-dom';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Container from '@/lib/pages/components/Container';
+import { getPoll, castVote } from '@/lib/api/api';
 
 interface PollOption {
     id: string;
@@ -9,70 +10,54 @@ interface PollOption {
 }
 
 interface Poll {
-    id: number;
+    id: string;
     question: string;
     options: PollOption[];
+    tags: string[];
+    totalVotes: number;
     created_at: string;
-    tags?: string[];
-    totalVotes?: number;
+    updated_at: string;
 }
 
 export default function Vote() {
-    const { id } = useParams<{ id: string }>();
+    const { id } = useParams();
+    const [poll, setPoll] = useState<Poll | null>(null);
+    const [loading, setLoading] = useState(true);
     const [selectedOption, setSelectedOption] = useState<string | null>(null);
     const [hasVoted, setHasVoted] = useState(false);
 
-    const data: Poll[] = [
-        {
-            id: 1,
-            question: "Siapa presiden Indonesia terbaik sepanjang sejarah peradaban manusia modern?",
-            options: [
-                { id: "soekarno", label: "Soekarno", votes: 45 },
-                { id: "soeharto", label: "Soeharto", votes: 120 },
-                { id: "habibie", label: "B.J. Habibie", votes: 30 },
-                { id: "gusdur", label: "Abdurrahman Wahid", votes: 85 }
-            ],
-            created_at: "2025-07-15",
-            tags: ["Politik", "Sejarah"],
-            totalVotes: 280
-        },
-        {
-            id: 2,
-            question: "Framework frontend mana yang paling Anda kuasai?",
-            options: [
-                { id: "vue", label: "Vue JS", votes: 3 },
-                { id: "react", label: "React", votes: 100 },
-                { id: "angular", label: "Angular", votes: 10 },
-                { id: "laravel", label: "Laravel", votes: 20 }
-            ],
-            created_at: "2025-07-18",
-            tags: ["Teknologi"],
-            totalVotes: 133
-        },
-    ];
+    useEffect(() => {
+        console.log('Fetching poll with ID:', id);
+        if (!id) return;
+        const fetchPoll = async () => {
+            try {
+                const data = await getPoll(id);
+                console.log('Poll data:', data);
+                setPoll(data);
+            } catch (err) {
+                console.log('Poll data:', err);
+                console.error('Failed to fetch poll:', err);
+            } finally {
+                console.log('Poll final');
+                setLoading(false);
+            }
+        };
+        fetchPoll();
+    }, [id]);
 
-    const poll = data.find(p => p.id === Number(id));
+    const handleVoteSubmit = async () => {
+        if (!selectedOption || !poll) return;
 
-    if (!poll) {
-        return (
-            <div className="flex justify-center p-10">
-                <div className="text-center">
-                    <h2 className="text-2xl font-bold text-gray-800">Poll not found</h2>
-                    <p className="mt-2 text-gray-600">The requested poll does not exist</p>
-                </div>
-            </div>
-        );
-    }
+        const voterId = 'dummy-voter-id';
 
-    const handleVoteSubmit = () => {
-        if (!selectedOption) return;
-
-        console.log(`Voted for option ${selectedOption} in poll ${poll.id}`);
-        setHasVoted(true);
-
-        const updatedOption = poll.options.find(opt => opt.id === selectedOption);
-        if (updatedOption) {
-            updatedOption.votes += 1;
+        try {
+            const updatedPoll = await castVote(poll.id, selectedOption, voterId);
+            if (updatedPoll) {
+                setPoll(updatedPoll);
+                setHasVoted(true);
+            }
+        } catch (error) {
+            console.error('Error voting:', error);
         }
     };
 
@@ -81,25 +66,36 @@ export default function Vote() {
     };
 
     const calculatePercentage = (votes: number) => {
-        const total = poll.options.reduce((sum, option) => sum + option.votes, 0);
+        const total = poll?.options.reduce((sum, option) => sum + option.votes, 0) ?? 0;
         return total > 0 ? Math.round((votes / total) * 100) : 0;
     };
+
+    if (loading) {
+        return <div className="text-center py-10 text-gray-500">Loading poll...</div>;
+    }
+
+    if (!poll) {
+        return (
+            <div className="flex justify-center p-10">
+                <div className="text-center">
+                    <h2 className="text-2xl font-bold text-gray-800">Poll not found</h2>
+                    <p className="mt-2 text-gray-600">The requested poll does not exist.</p>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <Container>
             <div className="block p-6 mb-5 border border-gray-200 rounded-lg shadow-sm bg-white">
-                {/* Poll header with creation date */}
                 <span className="text-sm text-gray-500">
                     Created: {new Date(poll.created_at).toLocaleDateString()}
                 </span>
                 <div className="flex justify-between items-start mb-4">
-                    <h5 className="text-2xl font-light text-gray-900">
-                        {poll.question}
-                    </h5>
+                    <h5 className="text-2xl font-light text-gray-900">{poll.question}</h5>
                 </div>
 
-                {/* Tags */}
-                {poll.tags && poll.tags.length > 0 && (
+                {poll.tags.length > 0 && (
                     <div className="mb-4">
                         {poll.tags.map((tag, index) => (
                             <span
@@ -112,7 +108,6 @@ export default function Vote() {
                     </div>
                 )}
 
-                {/* Voting options */}
                 <ul className="w-full text-sm font-medium text-gray-900 bg-white border border-gray-200 rounded-lg mb-4">
                     {poll.options.map((option) => (
                         <li key={option.id} className="w-full border-b border-gray-200 last:border-b-0">
@@ -152,12 +147,11 @@ export default function Vote() {
                     ))}
                 </ul>
 
-                {/* Vote button or results */}
                 <div className="flex flex-col mt-4 items-center">
                     {!hasVoted ? (
                         <button
                             type="button"
-                            className={`text-white font-medium rounded-lg text-sm px-5 py-3 focus:outline-none focus:ring-4 max-w-lg  ${selectedOption
+                            className={`text-white font-medium rounded-lg text-sm px-5 py-3 focus:outline-none focus:ring-4 max-w-lg ${selectedOption
                                 ? 'bg-blue-700 hover:bg-blue-800 focus:ring-blue-300'
                                 : 'bg-gray-400 cursor-not-allowed'
                                 }`}
