@@ -1,25 +1,74 @@
-// src/lib/api/api.ts
 import { createActor, canisterId } from '../../../../declarations/backend';
 
-// Create the actor instance once (reuse this across all API calls)
 const backend = createActor(canisterId);
 
-export const createNote = async (title: string, content: string) => {
-  return await backend.createNote(title, content);
+type PollOption = {
+  id: string;
+  label: string;
+  votes: number;
 };
 
-export const getNotes = async () => {
-  return await backend.getNotes();
+type Poll = {
+  id: string;
+  question: string;
+  options: PollOption[];
+  tags: string[];
+  totalVotes: number;
+  created_at: string;
+  updated_at: string;
 };
 
-export const getNote = async (id: string) => {
-  return await backend.getNote(id);
+type VoteRecord = {
+  id: string;
+  pollId: string;
+  optionId: string;
+  voterId: string;
+  votedAt: string;
 };
 
-export const updateNote = async (id: string, title: string, content: string) => {
-  return await backend.updateNote(id, title, content);
+export const createPoll = async (question: string, options: PollOption[], tags: string[]): Promise<Poll> => {
+  return await backend.createPoll(question, options, tags);
 };
 
-export const deleteNote = async (id: string) => {
-  return await backend.deleteNote(id);
+export const getPoll = async (id: string): Promise<Poll | null> => {
+  const result = await backend.getPoll(id);
+  return result.length ? result[0] : null;
+};
+
+export const getAllPolls = async (): Promise<Poll[]> => {
+  return await backend.getAllPolls();
+};
+
+export const getPollsByTag = async (tag: string): Promise<Poll[]> => {
+  return await backend.getPollsByTag(tag);
+};
+
+export const deletePoll = async (id: string): Promise<Poll | null> => {
+  const result = await backend.deletePoll(id);
+  return result.length ? result[0] : null;
+};
+
+// Vote-related APIs
+export const castVote = async (pollId: string, optionId: string, voterId: string): Promise<Poll | null> => {
+  const result = await backend.castVote(pollId, optionId, voterId);
+  return result.length ? result[0] : null;
+};
+
+export const getVotesForPoll = async (pollId: string): Promise<VoteRecord[]> => {
+  return await backend.getVotesForPoll(pollId);
+};
+
+export const hasVoted = async (pollId: string, voterId: string): Promise<boolean> => {
+  return await backend.hasVoted(pollId, voterId);
+};
+
+// Poll options APIs
+export const getPollOptions = async (pollId: string): Promise<PollOption[] | null> => {
+  const result = await backend.getPollOptions(pollId);
+  return result.length ? result[0] : null;
+};
+
+export const getVoteCountForOption = async (pollId: string, optionId: string): Promise<number | null> => {
+  const result = await backend.getVoteCountForOption(pollId, optionId);
+  return result.length ? result[0] : null;
 };
