@@ -38,9 +38,9 @@ export default function LoginButton() {
 
   if (loading) return <button disabled>Loading...</button>;
 
-  return isLoggedIn ? (
-    <button onClick={handleLogout}>Logout</button>
-  ) : (
-    <button onClick={handleLogin}>Login with Internet Identity</button>
+  return (
+    <button type="button" className="block  focus:outline-none text-white bg-orange-500 hover:bg-orange-600 focus:ring-4 focus:ring-orange-700 font-medium rounded-lg px-5 py-1" onClick={isLoggedIn ? handleLogout : handleLogin}>
+      {isLoggedIn ? "Logout" : "Login"}
+    </button>
   );
 }

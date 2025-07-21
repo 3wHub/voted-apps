@@ -1,3 +1,4 @@
+import LoginButton from '@/components/LoginButton';
 import { NavLink } from 'react-router-dom';
 
 export default function Header() {
@@ -46,8 +47,7 @@ export default function Header() {
               Vote
             </NavLink>
 
-            <button type="button" className="block  focus:outline-none text-white bg-orange-500 hover:bg-orange-600 focus:ring-4 focus:ring-orange-700 font-medium rounded-lg px-5 py-1">Login</button>
-
+            <LoginButton />
           </nav>
         </div>
       </div>
