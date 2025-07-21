@@ -7,7 +7,7 @@ export default function Header() {
         <div className="flex justify-between items-center">
           <div className="flex items-center">
             <NavLink to="/" className="flex items-center">
-              <img src="./public/voted.png" className="h-15" alt="voteD Logo" />
+              <img src="./voted.png" className="h-15" alt="voteD Logo" />
               <span className="self-center ml-2 text-2xl font-semibold whitespace-nowrap">VoteD</span>
             </NavLink>
           </div>
