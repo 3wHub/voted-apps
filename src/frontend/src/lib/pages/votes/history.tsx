@@ -142,7 +142,7 @@ export default function History() {
                             />
                         </svg>
                         <h3 className="mt-2 text-lg font-medium text-gray-900">No polls found</h3>
-                        <p className="mt-1 text-gray-500">
+                        <p className="mt-1 text-gray-500 text-lg">
                             {searchQuery ? 'Try a different search term' : 'Create a new poll to get started'}
                         </p>
                     </div>

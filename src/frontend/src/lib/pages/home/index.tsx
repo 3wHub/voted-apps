@@ -135,7 +135,7 @@ export default function Home() {
           {/* Filters Sidebar */}
           <div className="lg:w-1/4">
             <Card className="mb-6 bg-white border border-orange-100 shadow-sm dark:bg-white">
-              <h2 className="text-xl font-bold mb-4 text-gray-800">Filter Polls</h2>
+              <h2 className="text-lg font-bold mb-4 text-gray-800">Filter Polls</h2>
 
               {/* Search Filter */}
               <div className="mb-4">
@@ -234,20 +234,20 @@ export default function Home() {
             {/* Loading State */}
             {loading && (
               <div className="text-center py-10">
-                <Spinner size="xl" color="orange" className="mx-auto mb-4" />
-                <p className="text-gray-500">Loading polls...</p>
+                <Spinner size="lg" color="orange" className="mx-auto mb-4" />
+                <p className="text-gray-500 text-base">Loading polls...</p>
               </div>
             )}
 
             {/* Error State */}
             {error && (
-              <Alert color="failure" className="mb-6">
+              <Alert color="failure" className="error-alert mb-6 justify-center">
                 <div className="flex flex-col items-center text-center">
                   <span className="font-medium">Error loading polls</span>
                   <p className="mt-2 text-sm">{error}</p>
                   <Button
                     color="orange"
-                    className="mt-4"
+                    className="mt-4 bg-orange-100 text-orange-700 px-3 py-1"
                     onClick={() => window.location.reload()}
                   >
                     Try Again
@@ -261,22 +261,25 @@ export default function Home() {
               <>
                 {/* No Results */}
                 {filteredPolls.length === 0 ? (
-                  <Card className="text-center py-10 bg-white border border-orange-100 dark:bg-white">
+                  <Card className="text-center py-8 bg-white border border-orange-100 dark:bg-white text-lg">
                     <p className="text-gray-500 mb-4">
                       {polls.length === 0
                         ? 'No polls available yet. Be the first to create one!'
                         : 'No polls match your current filters.'}
                     </p>
-                    <Button
-                      color="orange"
-                      onClick={() => {
-                        setSearchTerm('');
-                        setSelectedTags([]);
-                        setDateFilter('');
-                      }}
-                    >
-                      Clear filters
-                    </Button>
+                    <div className="flex justify-center">
+                      <Button
+                        className='max-w-32 px-4 py-2 border border-transparent text-base font-medium rounded-md text-white bg-orange-600 hover:bg-orange-700 text-base'
+                        color="orange"
+                        onClick={() => {
+                          setSearchTerm('');
+                          setSelectedTags([]);
+                          setDateFilter('');
+                        }}
+                      >
+                        Clear filters
+                      </Button>
+                    </div>
                   </Card>
                 ) : (
                   /* Polls List */
