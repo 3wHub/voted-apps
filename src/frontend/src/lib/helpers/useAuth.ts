@@ -26,6 +26,7 @@ export function useAuth(): AuthHookReturn {
     try {
       await login();
       setIsLoggedIn(true);
+      window.location.reload();
     } catch (error) {
       console.error("Login failed:", error);
     } finally {
@@ -38,6 +39,7 @@ export function useAuth(): AuthHookReturn {
     try {
       await logout();
       setIsLoggedIn(false);
+      window.location.reload();
     } catch (error) {
       console.error("Logout failed:", error);
     } finally {
