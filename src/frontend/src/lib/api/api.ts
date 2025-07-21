@@ -2,13 +2,13 @@ import { createActor, canisterId } from '../../../../declarations/backend';
 
 const backend = createActor(canisterId);
 
-type PollOption = {
+export type PollOption = {
   id: string;
   label: string;
   votes: number;
 };
 
-type Poll = {
+export type Poll = {
   id: string;
   question: string;
   options: PollOption[];
@@ -18,7 +18,7 @@ type Poll = {
   updated_at: string;
 };
 
-type VoteRecord = {
+export type VoteRecord = {
   id: string;
   pollId: string;
   optionId: string;
@@ -26,49 +26,64 @@ type VoteRecord = {
   votedAt: string;
 };
 
-export const createPoll = async (question: string, options: PollOption[], tags: string[]): Promise<Poll> => {
-  return await backend.createPoll(question, options, tags);
+export const createPoll = async (
+  question: string,
+  options: PollOption[],
+  tags: string[],
+  agentId: string
+): Promise<Poll> => {
+  const result = await backend.createPoll(question, options, tags, agentId);
+  return result;
 };
 
 export const getPoll = async (id: string): Promise<Poll | null> => {
   const result = await backend.getPoll(id);
-  return result.length ? result[0] : null;
+  return result?.length ? result[0] : null;
+};
+
+export const getPollsByAgent = async (agentId: string): Promise<Poll[]> => {
+  return backend.getPollsByAgent(agentId);
 };
 
 export const getAllPolls = async (): Promise<Poll[]> => {
-  return await backend.getAllPolls();
+  return backend.getAllPolls();
 };
 
 export const getPollsByTag = async (tag: string): Promise<Poll[]> => {
-  return await backend.getPollsByTag(tag);
+  return backend.getPollsByTag(tag);
 };
 
 export const deletePoll = async (id: string): Promise<Poll | null> => {
   const result = await backend.deletePoll(id);
-  return result.length ? result[0] : null;
+  return result?.length ? result[0] : null;
 };
 
-// Vote-related APIs
-export const castVote = async (pollId: string, optionId: string, voterId: string): Promise<Poll | null> => {
+export const castVote = async (
+  pollId: string,
+  optionId: string,
+  voterId: string
+): Promise<Poll | null> => {
   const result = await backend.castVote(pollId, optionId, voterId);
-  return result.length ? result[0] : null;
+  return result?.length ? result[0] : null;
 };
 
 export const getVotesForPoll = async (pollId: string): Promise<VoteRecord[]> => {
-  return await backend.getVotesForPoll(pollId);
+  return backend.getVotesForPoll(pollId);
 };
 
 export const hasVoted = async (pollId: string, voterId: string): Promise<boolean> => {
-  return await backend.hasVoted(pollId, voterId);
+  return backend.hasVoted(pollId, voterId);
 };
 
-// Poll options APIs
 export const getPollOptions = async (pollId: string): Promise<PollOption[] | null> => {
   const result = await backend.getPollOptions(pollId);
-  return result.length ? result[0] : null;
+  return result?.length ? result[0] : null;
 };
 
-export const getVoteCountForOption = async (pollId: string, optionId: string): Promise<number | null> => {
+export const getVoteCountForOption = async (
+  pollId: string,
+  optionId: string
+): Promise<number | null> => {
   const result = await backend.getVoteCountForOption(pollId, optionId);
-  return result.length ? result[0] : null;
+  return result?.length ? result[0] : null;
 };

@@ -27,7 +27,6 @@ export default function Vote() {
     const [hasVoted, setHasVoted] = useState(false);
 
     useEffect(() => {
-        console.log('Fetching poll with ID:', id);
         if (!id) return;
         const fetchPoll = async () => {
             try {

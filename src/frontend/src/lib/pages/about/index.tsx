@@ -76,7 +76,7 @@ export default function About() {
           Be part of the movement transforming democratic participation through decentralized technology.
         </p>
         <Link
-          to="/votes-create"
+          to="/votes/create"
           className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-orange-600 hover:bg-orange-700"
         >
           Create Your First Vote

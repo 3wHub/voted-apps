@@ -4,6 +4,8 @@ import Home from '@/lib/pages/home';
 import Vote from '@/lib/pages/votes';
 import CreateVote from '@/lib/pages/votes/create';
 import About from '@/lib/pages/about';
+import History from '@/lib/pages/votes/history';
+import DetailVote from '@/lib/pages/votes/detail';
 
 export const routes: RouteObject[] = [
   {
@@ -16,10 +18,11 @@ export const routes: RouteObject[] = [
         path: 'votes',
         children: [
           { index: true, element: <Vote /> }, 
-          { path: ':id', element: <Vote /> },
+          { path: 'history', element: <History /> },
+          { path: 'create', element: <CreateVote /> },
+          { path: ':id', element: <DetailVote /> },
         ]
       },
-      { path: 'votes-create', element: <CreateVote /> },
     ],
   },
 ];

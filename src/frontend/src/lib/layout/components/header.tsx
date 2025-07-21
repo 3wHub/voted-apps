@@ -35,7 +35,7 @@ export default function Header() {
               About
             </NavLink>
             <NavLink
-              to="/votes-create"
+              to="/votes/create"
               className={({ isActive }) =>
                 `px-3 py-2 rounded-md text-lg font-medium ${isActive
                   ? 'bg-orange-100 text-orange-700'

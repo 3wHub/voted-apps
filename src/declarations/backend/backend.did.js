@@ -34,6 +34,7 @@ export const idlFactory = ({ IDL }) => {
             })
           ),
           IDL.Vec(IDL.Text),
+          IDL.Text,
         ],
         [
           IDL.Record({
@@ -43,6 +44,7 @@ export const idlFactory = ({ IDL }) => {
             'totalVotes' : IDL.Nat32,
             'tags' : IDL.Vec(IDL.Text),
             'created_at' : IDL.Text,
+            'created_by' : IDL.Text,
             'options' : IDL.Vec(
               IDL.Record({
                 'id' : IDL.Text,
@@ -111,6 +113,7 @@ export const idlFactory = ({ IDL }) => {
               'totalVotes' : IDL.Nat32,
               'tags' : IDL.Vec(IDL.Text),
               'created_at' : IDL.Text,
+              'created_by' : IDL.Text,
               'options' : IDL.Vec(
                 IDL.Record({
                   'id' : IDL.Text,
@@ -134,6 +137,30 @@ export const idlFactory = ({ IDL }) => {
                 'label' : IDL.Text,
               })
             )
+          ),
+        ],
+        ['query'],
+      ),
+    'getPollsByAgent' : IDL.Func(
+        [IDL.Text],
+        [
+          IDL.Vec(
+            IDL.Record({
+              'id' : IDL.Text,
+              'updated_at' : IDL.Text,
+              'question' : IDL.Text,
+              'totalVotes' : IDL.Nat32,
+              'tags' : IDL.Vec(IDL.Text),
+              'created_at' : IDL.Text,
+              'created_by' : IDL.Text,
+              'options' : IDL.Vec(
+                IDL.Record({
+                  'id' : IDL.Text,
+                  'votes' : IDL.Nat32,
+                  'label' : IDL.Text,
+                })
+              ),
+            })
           ),
         ],
         ['query'],

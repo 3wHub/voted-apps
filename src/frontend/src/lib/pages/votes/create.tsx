@@ -57,14 +57,24 @@ export default function CreateVote() {
                     votes: 0
                 }));
 
-            const newPoll = await createPoll(
+            if (pollOptions.length < 2) {
+                throw new Error("At least two options are required");
+            }
+
+            const result = await createPoll(
                 title.trim(),
                 pollOptions,
-                tags
+                tags.filter(t => t.trim()),
+                'u6s2n-gx777-77774-qaaba-cai',
             );
 
-            navigate(`/votes/${newPoll.id}`);
+            if (!result || !result.id) {
+                throw new Error("Poll creation failed");
+            }
+
+            navigate(`/votes/history`);
         } catch (err) {
+            console.error('Error creating poll:', err);
             setError('Failed to create poll. Please try again.');
         } finally {
             setIsSubmitting(false);
