@@ -1,9 +1,17 @@
-import react from '@vitejs/plugin-react';
-import { defineConfig } from 'vite';
-import environment from 'vite-plugin-environment';
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
+import environment from "vite-plugin-environment";
+import tailwindcss from "@tailwindcss/vite";
+import flowbiteReact from "flowbite-react/plugin/vite";
+import path from "path";
 
 export default defineConfig({
-  envDir: '../../',
+  envDir: "../../",
+  resolve: {
+    alias: {
+      "@": path.resolve(__dirname, "./src"),
+    },
+  },
   build: {
     emptyOutDir: true,
   },
@@ -25,8 +33,10 @@ export default defineConfig({
   },
   plugins: [
     react(),
-    environment('all', { prefix: 'CANISTER_' }),
-    environment('all', { prefix: 'DFX_' }),
+    tailwindcss(),
+    environment("all", { prefix: "CANISTER_" }),
+    environment("all", { prefix: "DFX_" }),
+    flowbiteReact()
   ],
   define: {
     'process.env': process.env,
