@@ -10,6 +10,9 @@
     "postinstall": "flowbite-react patch"
   },
   "dependencies": {
+    "@dfinity/agent": "^3.0.0",
+    "@dfinity/auth-client": "^3.0.0",
+    "@dfinity/principal": "^3.0.0",
     "@types/date-fns": "^2.5.3",
     "date-fns": "^4.1.0",
     "flowbite": "^3.1.2",

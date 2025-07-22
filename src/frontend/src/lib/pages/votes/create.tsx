@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import FormInput from '@/lib/pages/components/FormInput';
 import DateTimePicker from '@/lib/pages/components/DateTimePicker';
 import Container from '@/lib/pages/components/Container';
-import { createPoll } from '@/lib/api/api';
+import { createPoll } from '@/services/vote';
 
 export default function CreateVote() {
     const navigate = useNavigate();
@@ -65,7 +65,6 @@ export default function CreateVote() {
                 title.trim(),
                 pollOptions,
                 tags.filter(t => t.trim()),
-                'u6s2n-gx777-77774-qaaba-cai',
             );
 
             if (!result || !result.id) {

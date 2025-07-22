@@ -105,7 +105,6 @@ export async function whoAmI(): Promise<string> {
   const identity = authClient.getIdentity();
   const principal = identity.getPrincipal().toString();
 
-  console.log("Current principal:", principal);
   return principal;
 }
 

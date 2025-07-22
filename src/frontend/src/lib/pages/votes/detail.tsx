@@ -1,7 +1,7 @@
 import { useParams } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import Container from '@/lib/pages/components/Container';
-import { getPoll } from '@/lib/api/api';
+import { getPoll } from '@/services/vote';
 
 interface PollOption {
   id: string;
@@ -14,7 +14,7 @@ interface Poll {
   question: string;
   options: PollOption[];
   tags: string[];
-  totalVotes: number;
+  total_votes: number;
   created_at: string;
   updated_at: string;
 }
@@ -104,7 +104,7 @@ export default function DetailVote() {
         </ul>
 
         <div className="text-sm text-center text-gray-600">
-          Total votes: {poll.totalVotes}
+          Total votes: {poll.total_votes}
         </div>
       </div>
     </Container>

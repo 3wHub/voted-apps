@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import Container from '@/lib/pages/components/Container';
-import { getAllPolls } from '@/lib/api/api';
+import { getAllPolls } from '@/services/vote';
 
 interface PollOption {
     id: string;
@@ -13,7 +13,7 @@ interface Poll {
     id: string;
     question: string;
     tags: string[];
-    totalVotes: number;
+    total_votes: number;
     created_at: string;
     updated_at: string;
     options: PollOption[];
@@ -68,7 +68,7 @@ export default function Home() {
                 case 'oldest':
                     return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
                 case 'mostVotes':
-                    return b.totalVotes - a.totalVotes;
+                    return b.total_votes - a.total_votes;
             }
         });
 
@@ -198,7 +198,7 @@ export default function Home() {
                             </div>
 
                             <div className="flex justify-between items-center">
-                                <span className="text-sm text-gray-500">{poll.totalVotes} votes</span>
+                                <span className="text-sm text-gray-500">{poll.total_votes} votes</span>
                                 <NavLink
                                     to={`/votes/${poll.id}`}
                                     className="text-white bg-gray-800 hover:bg-gray-900 focus:outline-none focus:ring-4 focus:ring-gray-300 font-medium rounded-lg text-sm px-5 py-2.5"

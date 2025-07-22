@@ -1,7 +1,7 @@
 import { useParams } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import Container from '@/lib/pages/components/Container';
-import { getPoll, castVote } from '@/lib/api/api';
+import { getPoll, castVote } from '@/services/vote';
 
 interface PollOption {
     id: string;
@@ -14,7 +14,7 @@ interface Poll {
     question: string;
     options: PollOption[];
     tags: string[];
-    totalVotes: number;
+    total_votes: number;
     created_at: string;
     updated_at: string;
 }
@@ -47,10 +47,8 @@ export default function Vote() {
     const handleVoteSubmit = async () => {
         if (!selectedOption || !poll) return;
 
-        const voterId = 'dummy-voter-id';
-
         try {
-            const updatedPoll = await castVote(poll.id, selectedOption, voterId);
+            const updatedPoll = await castVote(poll.id, selectedOption);
             if (updatedPoll) {
                 setPoll(updatedPoll);
                 setHasVoted(true);

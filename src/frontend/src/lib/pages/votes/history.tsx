@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Container from '@/lib/pages/components/Container';
-import { getPollsByAgent } from '@/lib/api/api';
-import { Poll } from '@/lib/api/api';
+import { getPollsByAgent } from '@/services/vote';
+import { Poll } from '@/services/vote';
 
 export default function History() {
     const [polls, setPolls] = useState<Poll[]>([]);
@@ -15,7 +15,7 @@ export default function History() {
         const fetchPolls = async () => {
             try {
                 setLoading(true);
-                const allPolls = await getPollsByAgent('u6s2n-gx777-77774-qaaba-ca');
+                const allPolls = await getPollsByAgent();
                 setPolls(allPolls);
             } catch (err) {
                 console.log('Failed to fetch polls:', err);
@@ -186,12 +186,12 @@ export default function History() {
                                 <div className="mb-3">
                                     <div className="flex justify-between text-sm mb-1">
                                         <span>Total votes:</span>
-                                        <span className="font-medium">{poll.totalVotes}</span>
+                                        <span className="font-medium">{poll.total_votes}</span>
                                     </div>
                                     <div className="w-full bg-gray-200 rounded-full h-2">
                                         <div
                                             className="bg-orange-600 h-2 rounded-full"
-                                            style={{ width: `${Math.min(100, (poll.totalVotes / 100) * 100)}%` }}
+                                            style={{ width: `${Math.min(100, (poll.total_votes / 100) * 100)}%` }}
                                         ></div>
                                     </div>
                                 </div>
