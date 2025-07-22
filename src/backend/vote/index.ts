@@ -27,52 +27,82 @@ export class Votes {
     }),
   )
   createPoll(question: string, options: PollOption[], tags: string[], start_date: string, end_date: string): Poll {
-    const agentId = getAgentId().toString();
+    try {
+      const agentId = getAgentId().toString();
+      if (!agentId) {
+        throw new Error("User must be logged in to create a poll");
+      }
 
-    if (agentId == '') {
-      throw new Error("User must be logged in to create a poll");
+      if (!question?.trim()) {
+        throw new Error("Poll question cannot be empty");
+      }
+      if (question.length > 200) {
+        throw new Error("Question must be 200 characters or less");
+      }
+
+      if (!options || options.length < 2) {
+        throw new Error("At least two options are required");
+      }
+      if (options.length > 10) {
+        throw new Error("Maximum of 10 options allowed");
+      }
+
+      const optionLabels = new Set<string>();
+      for (const opt of options) {
+        if (!opt.label?.trim()) {
+          throw new Error("Option labels cannot be empty");
+        }
+        if (opt.label.length > 100) {
+          throw new Error("Option labels must be 100 characters or less");
+        }
+        if (optionLabels.has(opt.label.trim().toLowerCase())) {
+          throw new Error(`Duplicate option: "${opt.label}"`);
+        }
+        optionLabels.add(opt.label.trim().toLowerCase());
+      }
+
+      // Validate dates
+      if (!start_date || !end_date) {
+        throw new Error("Both start and end dates are required");
+      }
+
+      const now = new Date();
+      const nowISO = now.toISOString();
+      const pollId = uuidv4();
+
+      const processedOptions = options.map(opt => ({
+        id: opt.id || uuidv4(),
+        label: opt.label.trim(),
+        votes: 0
+      }));
+
+      const poll: Poll = {
+        id: pollId,
+        question: question.trim(),
+        options: processedOptions,
+        tags: tags ? tags.filter(t => t.trim()) : [],
+        total_votes: 0,
+        start_date: start_date,
+        end_date: end_date,
+        created_at: nowISO,
+        updated_at: nowISO,
+        created_by: agentId,
+      };
+
+      this.polls.insert(poll.id, poll);
+
+      let agentPollSet = this.agentPolls.get(agentId) || new Set();
+      agentPollSet.add(poll.id);
+      this.agentPolls.insert(agentId, agentPollSet);
+
+      return poll;
+    } catch (error) {
+      console.error("Poll creation failed:", error);
+      if (error instanceof Error) {
+        throw new Error(`Failed to create poll: ${error.message}`);
+      }
+      throw new Error("Failed to create poll due to an unexpected error");
     }
-
-    if (!question.trim()) {
-      throw new Error("Question cannot be empty");
-    }
-
-    if (options.length < 2) {
-      throw new Error("At least two options are required");
-    }
-
-    const now = new Date().toISOString();
-    const pollId = uuidv4();
-
-    const processedOptions = options.map(opt => ({
-      id: opt.id || uuidv4(),
-      label: opt.label,
-      votes: 0
-    }));
-
-    const poll: Poll = {
-      id: pollId,
-      question: question.trim(),
-      options: processedOptions,
-      tags: tags || [],
-      total_votes: 0,
-      start_date: start_date,
-      end_date: end_date,
-      created_at: now,
-      updated_at: now,
-      created_by: agentId,
-    };
-
-    this.polls.insert(poll.id, poll);
-
-    let agentPollSet = this.agentPolls.get(agentId);
-    if (!agentPollSet) {
-      agentPollSet = new Set();
-    }
-    agentPollSet.add(poll.id);
-    this.agentPolls.insert(agentId, agentPollSet);
-
-    return poll;
   }
 
   @query([], IDL.Vec(IDL.Record({
