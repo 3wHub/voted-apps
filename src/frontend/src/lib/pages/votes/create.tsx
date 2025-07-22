@@ -49,6 +49,10 @@ export default function CreateVote() {
         setIsSubmitting(true);
 
         try {
+            if (!title.trim()) {
+                throw new Error("Poll title cannot be empty");
+            }
+
             const pollOptions = options
                 .filter(opt => opt.trim())
                 .map((opt, index) => ({
@@ -61,20 +65,37 @@ export default function CreateVote() {
                 throw new Error("At least two options are required");
             }
 
+            if (!startDate || !endDate) {
+                throw new Error("Both start and end dates are required");
+            }
+
+            if (startDate >= endDate) {
+                throw new Error("End date must be after start date");
+            }
+
+            const formattedStartDate = startDate.toISOString();
+            const formattedEndDate = endDate.toISOString();
+
             const result = await createPoll(
                 title.trim(),
                 pollOptions,
                 tags.filter(t => t.trim()),
+                formattedStartDate,
+                formattedEndDate
             );
 
-            if (!result || !result.id) {
-                throw new Error("Poll creation failed");
+            if (!result?.id) {
+                throw new Error("Poll creation failed - no ID returned");
             }
 
             navigate(`/votes/history`);
         } catch (err) {
             console.error('Error creating poll:', err);
-            setError('Failed to create poll. Please try again.');
+            setError(
+                err instanceof Error
+                    ? err.message
+                    : 'An unexpected error occurred. Please try again.'
+            );
         } finally {
             setIsSubmitting(false);
         }
@@ -142,7 +163,10 @@ export default function CreateVote() {
                         onClick={() => setOptions([...options, ''])}
                         className="mt-2 text-sm text-orange-600 hover:text-orange-800"
                     >
-                        + Add Option
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" className="size-6">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                        </svg>
+                        Add Option
                     </button>
                 </div>
 
@@ -158,7 +182,10 @@ export default function CreateVote() {
                                     onClick={() => setTags(tags.filter(t => t !== tag))}
                                     className="ml-1.5 inline-flex text-orange-400 hover:text-orange-600"
                                 >
-                                    ×
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" className="size-6">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                                    </svg>
+
                                 </button>
                             </span>
                         ))}

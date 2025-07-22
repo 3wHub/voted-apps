@@ -1,4 +1,3 @@
-
 import { IDL, update, query } from 'azle';
 import { PollOption, Poll, VoteRecord } from './types';
 import { Votes } from './vote';
@@ -25,9 +24,9 @@ export default class {
     return "Logged out successfully";
   }
 
-  @update([IDL.Text, IDL.Vec(IDL.Record({ id: IDL.Text, label: IDL.Text, votes: IDL.Nat32 })), IDL.Vec(IDL.Text)])
-  createPoll(question: string, options: PollOption[], tags: string[]): Poll {
-    return this.votes.createPoll(question, options, tags);
+  @update([IDL.Text, IDL.Vec(IDL.Record({ id: IDL.Text, label: IDL.Text, votes: IDL.Nat32 })), IDL.Vec(IDL.Text), IDL.Text, IDL.Text])
+  createPoll(question: string, options: PollOption[], tags: string[], start_date: string, end_date: string): Poll {
+    return this.votes.createPoll(question, options, tags, start_date, end_date);
   }
 
   @query([])
@@ -51,9 +50,8 @@ export default class {
   }
 
   @query([])
-  getPollsByAgent([]): Poll[] {
-    const result = this.votes.getPollsByAgent();
-    return result || [];
+  getPollsByAgent(): Poll[] {
+    return this.votes.getPollsByAgent();
   }
 
   @update([IDL.Text, IDL.Text])
@@ -96,6 +94,8 @@ export const idlFactory = ({ IDL }: { IDL: any }) => {
     tags: IDL.Vec(IDL.Text),
     total_votes: IDL.Nat32,
     created_at: IDL.Text,
+    start_date: IDL.Text,
+    end_date: IDL.Text,
     updated_at: IDL.Text,
     created_by: IDL.Text,
   });
@@ -112,12 +112,12 @@ export const idlFactory = ({ IDL }: { IDL: any }) => {
     whoAmI: IDL.Func([], [IDL.Text], ['query']),
     login: IDL.Func([], [IDL.Text], ['update']),
     logout: IDL.Func([], [IDL.Text], ['update']),
-    createPoll: IDL.Func([IDL.Text, IDL.Vec(PollOption), IDL.Vec(IDL.Text)], [Poll], ['update']),
+    createPoll: IDL.Func([IDL.Text, IDL.Vec(PollOption), IDL.Vec(IDL.Text), IDL.Text, IDL.Text], [Poll], ['update']),
     getMyPolls: IDL.Func([], [IDL.Vec(Poll)], ['query']),
     getPoll: IDL.Func([IDL.Text], [IDL.Opt(Poll)], ['query']),
     getAllPolls: IDL.Func([], [IDL.Vec(Poll)], ['query']),
     getPollsByTag: IDL.Func([IDL.Text], [IDL.Vec(Poll)], ['query']),
-    getPollsByAgent: IDL.Func([IDL.Text], [IDL.Vec(Poll)], ['query']),
+    getPollsByAgent: IDL.Func([], [IDL.Vec(Poll)], ['query']),
     castVote: IDL.Func([IDL.Text, IDL.Text], [IDL.Opt(Poll)], ['update']),
     getVotesForPoll: IDL.Func([IDL.Text], [IDL.Vec(VoteRecord)], ['query']),
     hasVoted: IDL.Func([IDL.Text], [IDL.Bool], ['query']),

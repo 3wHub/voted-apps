@@ -1,6 +1,7 @@
 import { IDL, StableBTreeMap, update, query } from 'azle';
 import { v4 as uuidv4 } from 'uuid';
 import { Auth } from '../auth';
+import getAgentId from '../auth';
 import { PollOption, Poll, VoteRecord } from '../types';
 
 export class Votes {
@@ -10,12 +11,8 @@ export class Votes {
   private voterRecords = new StableBTreeMap<string, Set<string>>(2);
   private agentPolls = new StableBTreeMap<string, Set<string>>(3);
 
-  private getCurrentAgentId(): string {
-    return this.auth.getCurrentUser().toString();
-  }
-
   @update(
-    [IDL.Text, IDL.Vec(IDL.Record({ id: IDL.Text, label: IDL.Text, votes: IDL.Nat32 })), IDL.Vec(IDL.Text)],
+    [IDL.Text, IDL.Vec(IDL.Record({ id: IDL.Text, label: IDL.Text, votes: IDL.Nat32 })), IDL.Vec(IDL.Text), IDL.Text, IDL.Text],
     IDL.Record({
       id: IDL.Text,
       question: IDL.Text,
@@ -23,12 +20,18 @@ export class Votes {
       tags: IDL.Vec(IDL.Text),
       total_votes: IDL.Nat32,
       created_at: IDL.Text,
+      start_date: IDL.Text,
+      end_date: IDL.Text,
       updated_at: IDL.Text,
       created_by: IDL.Text,
     }),
   )
-  createPoll(question: string, options: PollOption[], tags: string[]): Poll {
-    const agentId = this.getCurrentAgentId();
+  createPoll(question: string, options: PollOption[], tags: string[], start_date: string, end_date: string): Poll {
+    const agentId = getAgentId().toString();
+
+    if (agentId == '') {
+      throw new Error("User must be logged in to create a poll");
+    }
 
     if (!question.trim()) {
       throw new Error("Question cannot be empty");
@@ -53,6 +56,8 @@ export class Votes {
       options: processedOptions,
       tags: tags || [],
       total_votes: 0,
+      start_date: start_date,
+      end_date: end_date,
       created_at: now,
       updated_at: now,
       created_by: agentId,
@@ -77,11 +82,13 @@ export class Votes {
     tags: IDL.Vec(IDL.Text),
     total_votes: IDL.Nat32,
     created_at: IDL.Text,
+    start_date: IDL.Text,
+    end_date: IDL.Text,
     updated_at: IDL.Text,
     created_by: IDL.Text,
   })))
   getMyPolls(): Poll[] {
-    const agentId = this.getCurrentAgentId();
+    const agentId = getAgentId().toString();
     const agentPollSet = this.agentPolls.get(agentId);
     if (!agentPollSet) return [];
 
@@ -97,6 +104,8 @@ export class Votes {
     tags: IDL.Vec(IDL.Text),
     total_votes: IDL.Nat32,
     created_at: IDL.Text,
+    start_date: IDL.Text,
+    end_date: IDL.Text,
     updated_at: IDL.Text,
     created_by: IDL.Text,
   })))
@@ -112,7 +121,10 @@ export class Votes {
     tags: IDL.Vec(IDL.Text),
     total_votes: IDL.Nat32,
     created_at: IDL.Text,
+    start_date: IDL.Text,
+    end_date: IDL.Text,
     updated_at: IDL.Text,
+    created_by: IDL.Text
   })))
   getAllPolls(): Poll[] {
     return this.polls.values();
@@ -125,6 +137,8 @@ export class Votes {
     tags: IDL.Vec(IDL.Text),
     total_votes: IDL.Nat32,
     created_at: IDL.Text,
+    start_date: IDL.Text,
+    end_date: IDL.Text,
     updated_at: IDL.Text,
   })))
   getPollsByTag(tag: string): Poll[] {
@@ -142,15 +156,16 @@ export class Votes {
     tags: IDL.Vec(IDL.Text),
     total_votes: IDL.Nat32,
     created_at: IDL.Text,
+    start_date: IDL.Text,
+    end_date: IDL.Text,
     updated_at: IDL.Text,
-    created_by: IDL.Text 
+    created_by: IDL.Text
   })))
   getPollsByAgent(): Poll[] {
-    const agentId = this.auth.getCurrentUser().toString();
+    const agentId = getAgentId().toString();
     const allPolls = Array.from(this.polls.values());
     return allPolls.filter(poll => poll.created_by === agentId);
   }
-
 
   @update([IDL.Text, IDL.Text], IDL.Opt(IDL.Record({
     id: IDL.Text,
@@ -159,10 +174,12 @@ export class Votes {
     tags: IDL.Vec(IDL.Text),
     total_votes: IDL.Nat32,
     created_at: IDL.Text,
+    start_date: IDL.Text,
+    end_date: IDL.Text,
     updated_at: IDL.Text,
   })))
   castVote(pollId: string, optionId: string): [Poll] | [] {
-    const voterId = this.getCurrentAgentId();
+    const voterId = getAgentId().toString();
     const poll = this.polls.get(pollId);
     if (!poll) return [];
 
@@ -220,7 +237,7 @@ export class Votes {
 
   @query([IDL.Text], IDL.Bool)
   hasVoted(pollId: string): boolean {
-    const voterId = this.getCurrentAgentId();
+    const voterId = getAgentId().toString();
     const voterPolls = this.voterRecords.get(voterId);
     return voterPolls ? voterPolls.has(pollId) : false;
   }

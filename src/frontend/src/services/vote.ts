@@ -14,6 +14,8 @@ export type Poll = {
   options: PollOption[];
   tags: string[];
   total_votes: number;
+  start_date: string;
+  end_date: string;
   created_at: string;
   updated_at: string;
   created_by: string;
@@ -30,11 +32,13 @@ export type VoteRecord = {
 export const createPoll = async (
   question: string,
   options: PollOption[],
-  tags: string[]
+  tags: string[],
+  start_date: string,
+  end_date: string
 ): Promise<Poll> => {
-  const result = await backend.createPoll(question, options, tags);
+  const result = await backend.createPoll(question, options, tags, start_date, end_date);
   if (!result) {
-    throw new Error('Failed to create poll');
+    throw new Error("Failed to create poll");
   }
   return result;
 };

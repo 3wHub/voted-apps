@@ -9,6 +9,8 @@ export interface _SERVICE {
       string,
       Array<{ 'id' : string, 'votes' : number, 'label' : string }>,
       Array<string>,
+      string,
+      string,
     ],
     undefined
   >,

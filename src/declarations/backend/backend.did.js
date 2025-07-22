@@ -12,6 +12,8 @@ export const idlFactory = ({ IDL }) => {
             })
           ),
           IDL.Vec(IDL.Text),
+          IDL.Text,
+          IDL.Text,
         ],
         [],
         [],

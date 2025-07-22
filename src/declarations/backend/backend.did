@@ -1,6 +1,6 @@
 service: () -> {
     castVote: (text, text) -> ();
-    createPoll: (text, vec record {id:text; votes:nat32; label:text}, vec text) -> ();
+    createPoll: (text, vec record {id:text; votes:nat32; label:text}, vec text, text, text) -> ();
     getAllPolls: () -> () query;
     getMyPolls: () -> () query;
     getPoll: (text) -> () query;
