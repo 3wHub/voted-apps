@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { initAuthClient, login, logout, isAuthenticated } from '../services/auth';
+import { initAuthClient, login, logout, isAuthenticated } from '../../../services/auth';
 
 export default function LoginButton() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);

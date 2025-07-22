@@ -1,4 +1,4 @@
-import LoginButton from '@/components/LoginButton';
+import LoginButton from '@/lib/layout/components/LoginButton';
 import { NavLink } from 'react-router-dom';
 
 export default function Header() {

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { whoAmI, isAuthenticated } from '../services/auth';
+import { whoAmI, isAuthenticated } from '../../../services/auth';
 
 export default function AuthStatus() {
   const [principal, setPrincipal] = useState('');
