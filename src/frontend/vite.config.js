@@ -18,18 +18,18 @@ export default defineConfig({
   optimizeDeps: {
     esbuildOptions: {
       define: {
-        global: "globalThis",
+        global: 'globalThis',
       },
     },
   },
   server: {
     proxy: {
-      "/api": {
-        target: "http://127.0.0.1:4943",
+      '/api': {
+        target: 'http://127.0.0.1:4943',
         changeOrigin: true,
       },
     },
-    host: '127.0.0.1'
+    host: '127.0.0.1',
   },
   plugins: [
     react(),
@@ -38,4 +38,7 @@ export default defineConfig({
     environment("all", { prefix: "DFX_" }),
     flowbiteReact()
   ],
+  define: {
+    'process.env': process.env,
+  },
 });

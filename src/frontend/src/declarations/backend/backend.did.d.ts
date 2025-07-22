@@ -3,9 +3,6 @@ import type { ActorMethod } from '@dfinity/agent';
 import type { IDL } from '@dfinity/candid';
 
 export interface _SERVICE {
-  'login': ActorMethod<[], string>,
-  'logout': ActorMethod<[], string>,
-  'whoAmI': ActorMethod<[], string>,
   'castVote' : ActorMethod<
     [string, string, string],
     [] | [

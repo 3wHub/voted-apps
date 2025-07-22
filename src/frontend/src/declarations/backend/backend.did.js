@@ -1,8 +1,5 @@
 export const idlFactory = ({ IDL }) => {
   return IDL.Service({
-    'login' : IDL.Func([], [], []),
-    'logout' : IDL.Func([], [], []),
-    'whoAmI' : IDL.Func([], [], ['query']),
     'castVote' : IDL.Func(
         [IDL.Text, IDL.Text, IDL.Text],
         [
@@ -187,6 +184,4 @@ export const idlFactory = ({ IDL }) => {
     'hasVoted' : IDL.Func([IDL.Text, IDL.Text], [IDL.Bool], ['query']),
   });
 };
-export const init = ({ IDL }) => {
-  return [];
-};
+export const init = ({ IDL }) => { return []; };

@@ -1,7 +1,4 @@
 service: () -> {
-    login: () -> ();
-    logout: () -> ();
-    whoAmI: () -> () query;
     castVote: (text, text, text) -> (opt record {id:text; updated_at:text; question:text; totalVotes:nat32; tags:vec text; created_at:text; options:vec record {id:text; votes:nat32; label:text}});
     createPoll: (text, vec record {id:text; votes:nat32; label:text}, vec text) -> (record {id:text; updated_at:text; question:text; totalVotes:nat32; tags:vec text; created_at:text; options:vec record {id:text; votes:nat32; label:text}});
     deletePoll: (text) -> (opt record {id:text; updated_at:text; question:text; totalVotes:nat32; tags:vec text; created_at:text; options:vec record {id:text; votes:nat32; label:text}});
