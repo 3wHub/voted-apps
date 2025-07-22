@@ -1,16 +1,16 @@
 service: () -> {
+    castVote: (text, text) -> ();
+    createPoll: (text, vec record {id:text; votes:nat32; label:text}, vec text) -> ();
+    getAllPolls: () -> () query;
+    getMyPolls: () -> () query;
+    getPoll: (text) -> () query;
+    getPollOptions: (text) -> () query;
+    getPollsByAgent: () -> () query;
+    getPollsByTag: (text) -> () query;
+    getVoteCountForOption: (text, text) -> () query;
+    getVotesForPoll: (text) -> () query;
+    hasVoted: (text) -> () query;
     login: () -> ();
     logout: () -> ();
     whoAmI: () -> () query;
-    castVote: (text, text, text) -> (opt record {id:text; updated_at:text; question:text; totalVotes:nat32; tags:vec text; created_at:text; options:vec record {id:text; votes:nat32; label:text}});
-    createPoll: (text, vec record {id:text; votes:nat32; label:text}, vec text, text) -> (record {id:text; updated_at:text; question:text; totalVotes:nat32; tags:vec text; created_at:text; created_by:text; options:vec record {id:text; votes:nat32; label:text}});
-    deletePoll: (text) -> (opt record {id:text; updated_at:text; question:text; totalVotes:nat32; tags:vec text; created_at:text; options:vec record {id:text; votes:nat32; label:text}});
-    getAllPolls: () -> (vec record {id:text; updated_at:text; question:text; totalVotes:nat32; tags:vec text; created_at:text; options:vec record {id:text; votes:nat32; label:text}}) query;
-    getPoll: (text) -> (opt record {id:text; updated_at:text; question:text; totalVotes:nat32; tags:vec text; created_at:text; created_by:text; options:vec record {id:text; votes:nat32; label:text}}) query;
-    getPollOptions: (text) -> (opt vec record {id:text; votes:nat32; label:text}) query;
-    getPollsByAgent: (text) -> (vec record {id:text; updated_at:text; question:text; totalVotes:nat32; tags:vec text; created_at:text; created_by:text; options:vec record {id:text; votes:nat32; label:text}}) query;
-    getPollsByTag: (text) -> (vec record {id:text; updated_at:text; question:text; totalVotes:nat32; tags:vec text; created_at:text; options:vec record {id:text; votes:nat32; label:text}}) query;
-    getVoteCountForOption: (text, text) -> (opt nat32) query;
-    getVotesForPoll: (text) -> (vec record {id:text; optionId:text; votedAt:text; voterId:text; pollId:text}) query;
-    hasVoted: (text, text) -> (bool) query;
 }
