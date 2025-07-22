@@ -3,9 +3,6 @@ import type { ActorMethod } from '@dfinity/agent';
 import type { IDL } from '@dfinity/candid';
 
 export interface _SERVICE {
-  'login': ActorMethod<[], string>,
-  'logout': ActorMethod<[], string>,
-  'whoAmI': ActorMethod<[], string>,
   'castVote' : ActorMethod<
     [string, string, string],
     [] | [
@@ -27,7 +24,6 @@ export interface _SERVICE {
       string,
       Array<{ 'id' : string, 'votes' : number, 'label' : string }>,
       Array<string>,
-      string,
     ],
     {
       'id' : string,
@@ -36,7 +32,6 @@ export interface _SERVICE {
       'totalVotes' : number,
       'tags' : Array<string>,
       'created_at' : string,
-      'created_by' : string,
       'options' : Array<{ 'id' : string, 'votes' : number, 'label' : string }>,
     }
   >,
@@ -82,7 +77,6 @@ export interface _SERVICE {
         'totalVotes' : number,
         'tags' : Array<string>,
         'created_at' : string,
-        'created_by' : string,
         'options' : Array<
           { 'id' : string, 'votes' : number, 'label' : string }
         >,
@@ -92,23 +86,6 @@ export interface _SERVICE {
   'getPollOptions' : ActorMethod<
     [string],
     [] | [Array<{ 'id' : string, 'votes' : number, 'label' : string }>]
-  >,
-  'getPollsByAgent' : ActorMethod<
-    [string],
-    Array<
-      {
-        'id' : string,
-        'updated_at' : string,
-        'question' : string,
-        'totalVotes' : number,
-        'tags' : Array<string>,
-        'created_at' : string,
-        'created_by' : string,
-        'options' : Array<
-          { 'id' : string, 'votes' : number, 'label' : string }
-        >,
-      }
-    >
   >,
   'getPollsByTag' : ActorMethod<
     [string],

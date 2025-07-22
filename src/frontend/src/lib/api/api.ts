@@ -87,3 +87,4 @@ export const getVoteCountForOption = async (
   const result = await backend.getVoteCountForOption(pollId, optionId);
   return result?.length ? result[0] : null;
 };
+
