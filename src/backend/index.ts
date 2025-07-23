@@ -1,11 +1,18 @@
 import { IDL, update, query } from 'azle';
 import { PollOption, Poll, VoteRecord } from './types';
 import { Votes } from './vote';
+import { votesInstance } from './vote';
 import { Auth } from './auth';
 
 export default class {
-  private votes = new Votes();
-  private auth = new Auth();
+  private votes: Votes;
+  private auth: Auth;
+
+  constructor() {
+    this.auth = new Auth();
+    this.votes = new Votes();
+  }
+  
 
   @query([])
   whoAmI(): string {
@@ -26,7 +33,7 @@ export default class {
 
   @update([IDL.Text, IDL.Vec(IDL.Record({ id: IDL.Text, label: IDL.Text, votes: IDL.Nat32 })), IDL.Vec(IDL.Text), IDL.Text, IDL.Text])
   createPoll(question: string, options: PollOption[], tags: string[], start_date: string, end_date: string): Poll {
-    return this.votes.createPoll(question, options, tags, start_date, end_date);
+    return votesInstance.createPoll(question, options, tags, start_date, end_date);
   }
 
   @query([])

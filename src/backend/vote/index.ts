@@ -1,18 +1,23 @@
 import { IDL, StableBTreeMap, update, query } from 'azle';
 import { v4 as uuidv4 } from 'uuid';
-import { Auth } from '../auth';
-import getAgentId from '../auth';
+import { authInstance } from '../auth';
 import { PollOption, Poll, VoteRecord } from '../types';
 
 export class Votes {
-  private auth = new Auth();
   private polls = new StableBTreeMap<string, Poll>(0);
   private votes = new StableBTreeMap<string, VoteRecord>(1);
   private voterRecords = new StableBTreeMap<string, Set<string>>(2);
   private agentPolls = new StableBTreeMap<string, Set<string>>(3);
 
+
   @update(
-    [IDL.Text, IDL.Vec(IDL.Record({ id: IDL.Text, label: IDL.Text, votes: IDL.Nat32 })), IDL.Vec(IDL.Text), IDL.Text, IDL.Text],
+    [
+      IDL.Text,
+      IDL.Vec(IDL.Record({ id: IDL.Text, label: IDL.Text, votes: IDL.Nat32 })),
+      IDL.Vec(IDL.Text),
+      IDL.Text,
+      IDL.Text,
+    ],
     IDL.Record({
       id: IDL.Text,
       question: IDL.Text,
@@ -26,34 +31,35 @@ export class Votes {
       created_by: IDL.Text,
     }),
   )
-  createPoll(question: string, options: PollOption[], tags: string[], start_date: string, end_date: string): Poll {
+  createPoll(
+    question: string,
+    options: PollOption[],
+    tags: string[],
+    start_date: string,
+    end_date: string,
+  ): Poll {
     try {
-      const agentId = getAgentId().toString();
+      if (!authInstance.isAuthenticated()) {
+        throw new Error('Authentication required');
+      }
+
+      const agentId = authInstance.getCurrentUser().toString();
       if (!agentId) {
-        throw new Error("User must be logged in to create a poll");
+        throw new Error('User must be logged in to create a poll');
       }
 
       if (!question?.trim()) {
-        throw new Error("Poll question cannot be empty");
-      }
-      if (question.length > 200) {
-        throw new Error("Question must be 200 characters or less");
+        throw new Error('Poll question cannot be empty');
       }
 
       if (!options || options.length < 2) {
-        throw new Error("At least two options are required");
-      }
-      if (options.length > 10) {
-        throw new Error("Maximum of 10 options allowed");
+        throw new Error('At least two options are required');
       }
 
       const optionLabels = new Set<string>();
       for (const opt of options) {
         if (!opt.label?.trim()) {
-          throw new Error("Option labels cannot be empty");
-        }
-        if (opt.label.length > 100) {
-          throw new Error("Option labels must be 100 characters or less");
+          throw new Error('Option labels cannot be empty');
         }
         if (optionLabels.has(opt.label.trim().toLowerCase())) {
           throw new Error(`Duplicate option: "${opt.label}"`);
@@ -61,29 +67,28 @@ export class Votes {
         optionLabels.add(opt.label.trim().toLowerCase());
       }
 
-      // Validate dates
       if (!start_date || !end_date) {
-        throw new Error("Both start and end dates are required");
+        throw new Error('Both start and end dates are required');
       }
 
       const now = new Date();
       const nowISO = now.toISOString();
       const pollId = uuidv4();
 
-      const processedOptions = options.map(opt => ({
+      const processedOptions = options.map((opt) => ({
         id: opt.id || uuidv4(),
         label: opt.label.trim(),
-        votes: 0
+        votes: 0,
       }));
 
       const poll: Poll = {
         id: pollId,
         question: question.trim(),
         options: processedOptions,
-        tags: tags ? tags.filter(t => t.trim()) : [],
+        tags: tags ? tags.filter((t) => t.trim()) : [],
         total_votes: 0,
-        start_date: start_date,
-        end_date: end_date,
+        start_date,
+        end_date,
         created_at: nowISO,
         updated_at: nowISO,
         created_by: agentId,
@@ -97,124 +102,162 @@ export class Votes {
 
       return poll;
     } catch (error) {
-      console.error("Poll creation failed:", error);
+      console.error('Poll creation failed:', error);
       if (error instanceof Error) {
         throw new Error(`Failed to create poll: ${error.message}`);
       }
-      throw new Error("Failed to create poll due to an unexpected error");
+      throw new Error('Failed to create poll due to an unexpected error');
     }
   }
 
-  @query([], IDL.Vec(IDL.Record({
-    id: IDL.Text,
-    question: IDL.Text,
-    options: IDL.Vec(IDL.Record({ id: IDL.Text, label: IDL.Text, votes: IDL.Nat32 })),
-    tags: IDL.Vec(IDL.Text),
-    total_votes: IDL.Nat32,
-    created_at: IDL.Text,
-    start_date: IDL.Text,
-    end_date: IDL.Text,
-    updated_at: IDL.Text,
-    created_by: IDL.Text,
-  })))
+  @query(
+    [],
+    IDL.Vec(
+      IDL.Record({
+        id: IDL.Text,
+        question: IDL.Text,
+        options: IDL.Vec(IDL.Record({ id: IDL.Text, label: IDL.Text, votes: IDL.Nat32 })),
+        tags: IDL.Vec(IDL.Text),
+        total_votes: IDL.Nat32,
+        created_at: IDL.Text,
+        start_date: IDL.Text,
+        end_date: IDL.Text,
+        updated_at: IDL.Text,
+        created_by: IDL.Text,
+      }),
+    ),
+  )
   getMyPolls(): Poll[] {
-    const agentId = getAgentId().toString();
+    if (!authInstance.isAuthenticated()) {
+      throw new Error('Authentication required');
+    }
+    const agentId = authInstance.getCurrentUser().toString();
     const agentPollSet = this.agentPolls.get(agentId);
     if (!agentPollSet) return [];
 
     return Array.from(agentPollSet)
-      .map(pollId => this.polls.get(pollId))
-      .filter(poll => poll !== undefined) as Poll[];
+      .map((pollId) => this.polls.get(pollId))
+      .filter((poll) => poll !== undefined) as Poll[];
   }
 
-  @query([IDL.Text], IDL.Opt(IDL.Record({
-    id: IDL.Text,
-    question: IDL.Text,
-    options: IDL.Vec(IDL.Record({ id: IDL.Text, label: IDL.Text, votes: IDL.Nat32 })),
-    tags: IDL.Vec(IDL.Text),
-    total_votes: IDL.Nat32,
-    created_at: IDL.Text,
-    start_date: IDL.Text,
-    end_date: IDL.Text,
-    updated_at: IDL.Text,
-    created_by: IDL.Text,
-  })))
+  @query(
+    [IDL.Text],
+    IDL.Opt(
+      IDL.Record({
+        id: IDL.Text,
+        question: IDL.Text,
+        options: IDL.Vec(IDL.Record({ id: IDL.Text, label: IDL.Text, votes: IDL.Nat32 })),
+        tags: IDL.Vec(IDL.Text),
+        total_votes: IDL.Nat32,
+        created_at: IDL.Text,
+        start_date: IDL.Text,
+        end_date: IDL.Text,
+        updated_at: IDL.Text,
+        created_by: IDL.Text,
+      }),
+    ),
+  )
   getPoll(id: string): [] | [Poll] {
     const poll = this.polls.get(id);
     return poll ? [poll] : [];
   }
 
-  @query([], IDL.Vec(IDL.Record({
-    id: IDL.Text,
-    question: IDL.Text,
-    options: IDL.Vec(IDL.Record({ id: IDL.Text, label: IDL.Text, votes: IDL.Nat32 })),
-    tags: IDL.Vec(IDL.Text),
-    total_votes: IDL.Nat32,
-    created_at: IDL.Text,
-    start_date: IDL.Text,
-    end_date: IDL.Text,
-    updated_at: IDL.Text,
-    created_by: IDL.Text
-  })))
+  @query(
+    [],
+    IDL.Vec(
+      IDL.Record({
+        id: IDL.Text,
+        question: IDL.Text,
+        options: IDL.Vec(IDL.Record({ id: IDL.Text, label: IDL.Text, votes: IDL.Nat32 })),
+        tags: IDL.Vec(IDL.Text),
+        total_votes: IDL.Nat32,
+        created_at: IDL.Text,
+        start_date: IDL.Text,
+        end_date: IDL.Text,
+        updated_at: IDL.Text,
+        created_by: IDL.Text,
+      }),
+    ),
+  )
   getAllPolls(): Poll[] {
     return this.polls.values();
   }
 
-  @query([IDL.Text], IDL.Vec(IDL.Record({
-    id: IDL.Text,
-    question: IDL.Text,
-    options: IDL.Vec(IDL.Record({ id: IDL.Text, label: IDL.Text, votes: IDL.Nat32 })),
-    tags: IDL.Vec(IDL.Text),
-    total_votes: IDL.Nat32,
-    created_at: IDL.Text,
-    start_date: IDL.Text,
-    end_date: IDL.Text,
-    updated_at: IDL.Text,
-  })))
+  @query(
+    [IDL.Text],
+    IDL.Vec(
+      IDL.Record({
+        id: IDL.Text,
+        question: IDL.Text,
+        options: IDL.Vec(IDL.Record({ id: IDL.Text, label: IDL.Text, votes: IDL.Nat32 })),
+        tags: IDL.Vec(IDL.Text),
+        total_votes: IDL.Nat32,
+        created_at: IDL.Text,
+        start_date: IDL.Text,
+        end_date: IDL.Text,
+        updated_at: IDL.Text,
+      }),
+    ),
+  )
   getPollsByTag(tag: string): Poll[] {
     return this.polls.values().filter((poll) => poll.tags.includes(tag));
   }
 
-  @query([], IDL.Vec(IDL.Record({
-    id: IDL.Text,
-    question: IDL.Text,
-    options: IDL.Vec(IDL.Record({
-      id: IDL.Text,
-      label: IDL.Text,
-      votes: IDL.Nat32
-    })),
-    tags: IDL.Vec(IDL.Text),
-    total_votes: IDL.Nat32,
-    created_at: IDL.Text,
-    start_date: IDL.Text,
-    end_date: IDL.Text,
-    updated_at: IDL.Text,
-    created_by: IDL.Text
-  })))
+  @query(
+    [],
+    IDL.Vec(
+      IDL.Record({
+        id: IDL.Text,
+        question: IDL.Text,
+        options: IDL.Vec(
+          IDL.Record({
+            id: IDL.Text,
+            label: IDL.Text,
+            votes: IDL.Nat32,
+          }),
+        ),
+        tags: IDL.Vec(IDL.Text),
+        total_votes: IDL.Nat32,
+        created_at: IDL.Text,
+        start_date: IDL.Text,
+        end_date: IDL.Text,
+        updated_at: IDL.Text,
+        created_by: IDL.Text,
+      }),
+    ),
+  )
   getPollsByAgent(): Poll[] {
-    const agentId = getAgentId().toString();
+    if (!authInstance.isAuthenticated()) {
+      throw new Error('Authentication required');
+    }
+    const agentId = authInstance.getCurrentUser().toString();
     const allPolls = Array.from(this.polls.values());
-    return allPolls.filter(poll => poll.created_by === agentId);
+    return allPolls.filter((poll) => poll.created_by === agentId);
   }
 
-  @update([IDL.Text, IDL.Text], IDL.Opt(IDL.Record({
-    id: IDL.Text,
-    question: IDL.Text,
-    options: IDL.Vec(IDL.Record({ id: IDL.Text, label: IDL.Text, votes: IDL.Nat32 })),
-    tags: IDL.Vec(IDL.Text),
-    total_votes: IDL.Nat32,
-    created_at: IDL.Text,
-    start_date: IDL.Text,
-    end_date: IDL.Text,
-    updated_at: IDL.Text,
-  })))
+  @update(
+    [IDL.Text, IDL.Text],
+    IDL.Opt(
+      IDL.Record({
+        id: IDL.Text,
+        question: IDL.Text,
+        options: IDL.Vec(IDL.Record({ id: IDL.Text, label: IDL.Text, votes: IDL.Nat32 })),
+        tags: IDL.Vec(IDL.Text),
+        total_votes: IDL.Nat32,
+        created_at: IDL.Text,
+        start_date: IDL.Text,
+        end_date: IDL.Text,
+        updated_at: IDL.Text,
+      }),
+    ),
+  )
   castVote(pollId: string, optionId: string): [Poll] | [] {
-    const voterId = getAgentId().toString();
+    const voterId = authInstance.getCurrentUser().toString();
     const poll = this.polls.get(pollId);
     if (!poll) return [];
 
     if (poll.created_by === voterId) {
-      throw new Error("Poll creators cannot vote on their own polls");
+      throw new Error('Poll creators cannot vote on their own polls');
     }
 
     const voterPolls = this.voterRecords.get(voterId) ?? new Set();
@@ -254,29 +297,41 @@ export class Votes {
     return [updatedPoll];
   }
 
-  @query([IDL.Text], IDL.Vec(IDL.Record({
-    id: IDL.Text,
-    pollId: IDL.Text,
-    optionId: IDL.Text,
-    voterId: IDL.Text,
-    votedAt: IDL.Text,
-  })))
+  @query(
+    [IDL.Text],
+    IDL.Vec(
+      IDL.Record({
+        id: IDL.Text,
+        pollId: IDL.Text,
+        optionId: IDL.Text,
+        voterId: IDL.Text,
+        votedAt: IDL.Text,
+      }),
+    ),
+  )
   getVotesForPoll(pollId: string): VoteRecord[] {
     return this.votes.values().filter((vote) => vote.pollId === pollId);
   }
 
   @query([IDL.Text], IDL.Bool)
   hasVoted(pollId: string): boolean {
-    const voterId = getAgentId().toString();
+    const voterId = authInstance.getCurrentUser().toString();
     const voterPolls = this.voterRecords.get(voterId);
     return voterPolls ? voterPolls.has(pollId) : false;
   }
 
-  @query([IDL.Text], IDL.Opt(IDL.Vec(IDL.Record({
-    id: IDL.Text,
-    label: IDL.Text,
-    votes: IDL.Nat32
-  }))))
+  @query(
+    [IDL.Text],
+    IDL.Opt(
+      IDL.Vec(
+        IDL.Record({
+          id: IDL.Text,
+          label: IDL.Text,
+          votes: IDL.Nat32,
+        }),
+      ),
+    ),
+  )
   getPollOptions(pollId: string): [] | [PollOption[]] {
     const poll = this.polls.get(pollId);
     return poll ? [poll.options] : [];
@@ -289,3 +344,5 @@ export class Votes {
     return option ? [option.votes] : [];
   }
 }
+
+export const votesInstance = new Votes();

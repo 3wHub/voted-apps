@@ -73,9 +73,28 @@ export default function CreateVote() {
                 throw new Error("End date must be after start date");
             }
 
-            const formattedStartDate = startDate.toISOString();
-            const formattedEndDate = endDate.toISOString();
+            const validateAndFormatDate = (date: Date): string => {
+                const isoString = date.toISOString();
+                if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/.test(isoString)) {
+                  throw new Error(`Invalid date format generated: ${isoString}`);
+                }
+                return isoString;
+              };
+              
+              const formattedStartDate = validateAndFormatDate(startDate);
+              const formattedEndDate = validateAndFormatDate(endDate);
 
+            if (new Date(formattedStartDate) >= new Date(formattedEndDate)) {
+                throw new Error("End date must be after start date");
+            }
+
+            console.log('Creating poll with:', {
+                title: title.trim(),
+                options: pollOptions,
+                tags: tags.filter(t => t.trim()),
+                start_date: formattedStartDate,
+                end_date: formattedEndDate,
+            });
             const result = await createPoll(
                 title.trim(),
                 pollOptions,
@@ -90,12 +109,24 @@ export default function CreateVote() {
 
             navigate(`/votes/history`);
         } catch (err) {
-            console.error('Error creating poll:', err);
-            setError(
-                err instanceof Error
-                    ? err.message
-                    : 'An unexpected error occurred. Please try again.'
-            );
+            console.error('Full error:', err);
+
+            let errorMessage = 'Failed to create poll';
+
+            if (err instanceof Error) {
+                if (err.message.includes("unexpected end of buffer") ||
+                    err.message.includes("Invalid data format")) {
+                    errorMessage = "Server response format error. Please contact support.";
+                } else if (err.message.includes("network")) {
+                    errorMessage = "Network issues detected. Please check your connection.";
+                } else if (err.message.includes("IDL")) {
+                    errorMessage = "Data format mismatch with server. Please check your inputs.";
+                } else {
+                    errorMessage = err.message;
+                }
+            }
+
+            setError(errorMessage);
         } finally {
             setIsSubmitting(false);
         }

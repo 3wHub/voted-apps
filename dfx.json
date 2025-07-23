@@ -3,6 +3,9 @@
     "backend": {
       "type": "azle",
       "main": "src/backend/index.ts",
+      "custom": {
+        "experimental": true
+      },
       "declarations": {
         "output": "../declarations/backend",
         "node_compatibility": true
@@ -30,3 +33,4 @@
   },
   "output_env_file": ".env"
 }
+
