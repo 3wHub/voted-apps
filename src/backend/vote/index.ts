@@ -6,8 +6,8 @@ import { PollOption, Poll, VoteRecord } from '../types';
 export class Votes {
   private polls = new StableBTreeMap<string, Poll>(0);
   private votes = new StableBTreeMap<string, VoteRecord>(1);
-  private voterRecords = new StableBTreeMap<string, Set<string>>(2);
-  private agentPolls = new StableBTreeMap<string, Set<string>>(3);
+  private voterRecords = new StableBTreeMap<string, string[]>(2);
+  private agentPolls = new StableBTreeMap<string, string[]>(3);
 
 
   @update(
@@ -44,6 +44,35 @@ export class Votes {
     agentId: string,
   ): Poll {
     try {
+
+      if (!question || question.length > 200) {
+        throw new Error("Question is required and must be <= 200 characters");
+      }
+
+      if (description.length > 500) {
+        throw new Error("Description must be <= 500 characters");
+      }
+
+      if (options.length < 2 || options.length > 100) {
+        throw new Error("Must have between 2 and 100 options");
+      }
+
+      for (const opt of options) {
+        if (!opt.id || !opt.label || opt.label.length > 100) {
+          throw new Error("Each option must have id and label <= 100 characters");
+        }
+      }
+
+      if (tags.length > 50) {
+        throw new Error("Maximum of 50 tags allowed");
+      }
+
+      for (const tag of tags) {
+        if (tag.length > 50) {
+          throw new Error("Each tag must be <= 50 characters");
+        }
+      }
+
       const now = new Date().toISOString();
       const id = uuidv4();
 
@@ -63,9 +92,11 @@ export class Votes {
 
       this.polls.insert(id, poll);
 
-      const existingSet = this.agentPolls.get(agentId) ?? new Set<string>();
-      existingSet.add(id);
-      this.agentPolls.insert(agentId, existingSet);
+      const existingPollIds = this.agentPolls.get(agentId) ?? [];
+      if (!existingPollIds.includes(id)) {
+        existingPollIds.push(id);
+      }
+      this.agentPolls.insert(agentId, existingPollIds);
 
       return poll;
     } catch (error) {
@@ -218,8 +249,8 @@ export class Votes {
       throw new Error('Poll creators cannot vote on their own polls');
     }
 
-    const voterPolls = this.voterRecords.get(voterId) ?? new Set();
-    if (voterPolls.has(pollId)) {
+    const voterPolls = this.voterRecords.get(voterId) ?? [];
+    if (voterPolls.includes(pollId)) {
       throw new Error('You have already voted in this poll');
     }
 
@@ -248,7 +279,7 @@ export class Votes {
       votedAt: new Date().toISOString(),
     });
 
-    voterPolls.add(pollId);
+    voterPolls.push(pollId);
     this.voterRecords.insert(voterId, voterPolls);
     this.polls.insert(pollId, updatedPoll);
 
@@ -275,7 +306,7 @@ export class Votes {
   hasVoted(pollId: string): boolean {
     const voterId = authInstance.getCurrentUser().toString();
     const voterPolls = this.voterRecords.get(voterId);
-    return voterPolls ? voterPolls.has(pollId) : false;
+    return voterPolls ? voterPolls.includes(pollId) : false;
   }
 
   @query(

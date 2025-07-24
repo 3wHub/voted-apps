@@ -61,6 +61,29 @@ export default function CreateVote() {
                 throw new Error("Both start and end dates are required");
             }
 
+            if (!title || title.length > 200) {
+                throw new Error("Question is required and must be <= 200 characters");
+            }
+
+            if (description.length > 500) {
+                throw new Error("Description must be <= 500 characters");
+            }
+
+            if (options.length < 2 || options.length > 100) {
+                throw new Error("Must have between 2 and 100 options");
+            }
+
+
+            if (tags.length > 50) {
+                throw new Error("Maximum of 50 tags allowed");
+            }
+
+            for (const tag of tags) {
+                if (tag.length > 50) {
+                    throw new Error("Each tag must be <= 50 characters");
+                }
+            }
+
             const pollOptions = options
                 .filter(opt => opt.trim())
                 .map((opt, index) => ({
@@ -101,7 +124,6 @@ export default function CreateVote() {
             navigate(`/votes/history`);
         } catch (err) {
             console.error('Poll creation error:', err);
-
             let errorMessage = 'Failed to create poll';
             if (err instanceof Error) {
                 if (err.message.includes("unexpected end of buffer")) {
@@ -263,5 +285,6 @@ export default function CreateVote() {
             </form>
         </Container>
     );
+
 }
 

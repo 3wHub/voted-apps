@@ -18,7 +18,6 @@ export default function History() {
                 const allPolls = await getPollsByAgent();
                 setPolls(allPolls);
             } catch (err) {
-                console.log('Failed to fetch polls:', err);
                 setError('Failed to load voting history. Please try again.');
             } finally {
                 setLoading(false);
@@ -30,11 +29,11 @@ export default function History() {
 
     const filteredPolls = polls.filter(poll => {
         const now = new Date();
-        const isActive = true; 
-        
+        const isActive = true;
+
         if (filter === 'active' && !isActive) return false;
         if (filter === 'closed' && isActive) return false;
-        
+
         if (searchQuery) {
             const query = searchQuery.toLowerCase();
             return (
@@ -42,7 +41,7 @@ export default function History() {
                 poll.tags.some(tag => tag.toLowerCase().includes(query))
             );
         }
-        
+
         return true;
     });
 
@@ -132,99 +131,116 @@ export default function History() {
             </div>
 
             {filteredPolls.length === 0 ? (
-                <div className="text-center py-12">
-                    <svg
-                        className="mx-auto h-12 w-12 text-gray-400"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                        xmlns="http://www.w3.org/2000/svg"
-                    >
-                        <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={1}
-                            d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                        />
-                    </svg>
-                    <h3 className="mt-2 text-lg font-medium text-gray-900">No polls found</h3>
-                    <p className="mt-1 text-gray-500">
-                        {searchQuery ? 'Try a different search term' : 'Create a new poll to get started'}
-                    </p>
-                    <div className="mt-6">
-                        <Link
-                            to="/votes/create"
-                            className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-orange-600 hover:bg-orange-700"
+                <div>
+                    <div className='flex justify-end items-center mb-6'>
+                        <div className="mt-6">
+                            <Link
+                                to="/votes/create"
+                                className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-orange-600 hover:bg-orange-700"
+                            >
+                                Create New Poll
+                            </Link>
+                        </div>
+                    </div>
+                    <div className="text-center py-12">
+                        <svg
+                            className="mx-auto h-12 w-12 text-gray-400"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                            xmlns="http://www.w3.org/2000/svg"
                         >
-                            Create New Poll
-                        </Link>
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={1}
+                                d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                            />
+                        </svg>
+                        <h3 className="mt-2 text-lg font-medium text-gray-900">No polls found</h3>
+                        <p className="mt-1 text-gray-500">
+                            {searchQuery ? 'Try a different search term' : 'Create a new poll to get started'}
+                        </p>
                     </div>
                 </div>
             ) : (
-                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                    {filteredPolls.map((poll) => (
-                        <div key={poll.id} className="border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow">
-                            <div className="p-4">
-                                <div className="flex justify-between items-start mb-2">
-                                    <h3 className="text-lg font-medium text-gray-900 line-clamp-2">
-                                        <Link to={`/vote/${poll.id}`} className="hover:text-orange-600">
-                                            {poll.question}
+                <div>
+                    <div className='flex justify-end items-center mb-6'>
+                        <div className="mt-6">
+                            <Link
+                                to="/votes/create"
+                                className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-orange-600 hover:bg-orange-700"
+                            >
+                                Create New Poll
+                            </Link>
+                        </div>
+                    </div>
+                    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                        {filteredPolls.map((poll) => (
+                            <div key={poll.id} className="border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+                                <div className="p-4">
+                                    <div className="flex justify-between items-start mb-2">
+                                        <h3 className="text-lg font-medium text-gray-900 line-clamp-2">
+                                            <Link to={`/vote/${poll.id}`} className="hover:text-orange-600">
+                                                {poll.question}
+                                            </Link>
+                                        </h3>
+                                        <span className={`px-2 py-1 text-xs rounded-full ${true ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
+                                            {true ? 'Active' : 'Closed'}
+                                        </span>
+                                    </div>
+
+                                    <div className="flex items-center text-sm text-gray-500 mb-3">
+                                        <svg className="mr-1.5 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                        </svg>
+                                        Created on {formatDate(poll.created_at)}
+                                    </div>
+
+                                    <div className="mb-3">
+                                        <div className="flex justify-between text-sm mb-1">
+                                            <span>Total votes:</span>
+                                            <span className="font-medium">{poll.total_votes}</span>
+                                        </div>
+                                        <div className="w-full bg-gray-200 rounded-full h-2">
+                                            <div
+                                                className="bg-orange-600 h-2 rounded-full"
+                                                style={{ width: `${Math.min(100, (poll.total_votes / 100) * 100)}%` }}
+                                            ></div>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex flex-wrap gap-1 mb-3">
+                                        {poll.tags.slice(0, 3).map((tag) => (
+                                            <span key={tag} className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-orange-100 text-orange-800">
+                                                {tag}
+                                            </span>
+                                        ))}
+                                        {poll.tags.length > 3 && (
+                                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800">
+                                                +{poll.tags.length - 3}
+                                            </span>
+                                        )}
+                                    </div>
+
+                                    <div className="flex justify-between items-center pt-2 border-t">
+                                        <Link
+                                            to={`/vote/${poll.id}`}
+                                            className="text-sm font-medium text-orange-600 hover:text-orange-500"
+                                        >
+                                            View details
                                         </Link>
-                                    </h3>
-                                    <span className={`px-2 py-1 text-xs rounded-full ${true ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
-                                        {true ? 'Active' : 'Closed'}
-                                    </span>
-                                </div>
-
-                                <div className="flex items-center text-sm text-gray-500 mb-3">
-                                    <svg className="mr-1.5 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                    </svg>
-                                    Created on {formatDate(poll.created_at)}
-                                </div>
-
-                                <div className="mb-3">
-                                    <div className="flex justify-between text-sm mb-1">
-                                        <span>Total votes:</span>
-                                        <span className="font-medium">{poll.total_votes}</span>
-                                    </div>
-                                    <div className="w-full bg-gray-200 rounded-full h-2">
-                                        <div
-                                            className="bg-orange-600 h-2 rounded-full"
-                                            style={{ width: `${Math.min(100, (poll.total_votes / 100) * 100)}%` }}
-                                        ></div>
-                                    </div>
-                                </div>
-
-                                <div className="flex flex-wrap gap-1 mb-3">
-                                    {poll.tags.slice(0, 3).map((tag) => (
-                                        <span key={tag} className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-orange-100 text-orange-800">
-                                            {tag}
-                                        </span>
-                                    ))}
-                                    {poll.tags.length > 3 && (
-                                        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800">
-                                            +{poll.tags.length - 3}
-                                        </span>
-                                    )}
-                                </div>
-
-                                <div className="flex justify-between items-center pt-2 border-t">
-                                    <Link
-                                        to={`/vote/${poll.id}`}
-                                        className="text-sm font-medium text-orange-600 hover:text-orange-500"
-                                    >
-                                        View details
-                                    </Link>
-                                    <div className="text-sm text-gray-500">
-                                        {poll.options.length} options
+                                        <div className="text-sm text-gray-500">
+                                            {poll.options.length} options
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    ))}
+                        ))}
+                    </div>
                 </div>
             )}
         </Container>
     );
 }
+
