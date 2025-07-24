@@ -41,22 +41,13 @@ export const createPoll = async (
   options: PollOption[],
   tags: string[],
   start_date: string,
-  end_date: string
+  end_date: string,
 ): Promise<Poll> => {
   try {
     const agentId = (await whoAmI()).toString();
+
     if (!agentId) throw new Error('Authentication required');
 
-
-    console.log('Creating poll with data:', {
-      question,
-      description,
-      options,
-      tags,
-      start_date,
-      end_date,
-      agentId
-    })
     const result = await backend.createPoll(
       question,
       description,
@@ -67,19 +58,10 @@ export const createPoll = async (
       agentId
     );
 
-    if (!result || !('id' in result)) {
-      throw new Error('Invalid response from canister');
-    }
-
+    if (!result.id) throw new Error('Invalid response');
     return result;
   } catch (error) {
-    if (error instanceof Error) {
-      if (error.message.includes('unexpected end of buffer')) {
-        throw new Error('Data format mismatch with backend. Please check the API contract.');
-      }
-      throw error;
-    }
-    throw new Error('Failed to create poll due to an unknown error');
+    throw error;
   }
 };
 
