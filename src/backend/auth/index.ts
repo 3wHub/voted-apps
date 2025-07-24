@@ -1,9 +1,17 @@
 import { IDL, Principal, query, update } from 'azle';
+import { AuthClient } from '@dfinity/auth-client';
+
+
+let authClient: AuthClient;
+
+export async function initAuthClient(): Promise<void> {
+  authClient = await AuthClient.create();
+}
+
 
 export class Auth {
     private currentUser: Principal | null = null;
-
-
+    
     @update([IDL.Principal], IDL.Bool)
     login(principal: Principal): boolean {
         this.currentUser = principal;
@@ -31,7 +39,9 @@ export class Auth {
 
     @query([], IDL.Text)
     whoAmI(): string {
-        return this.getCurrentUser().toString();
+        const identity = authClient.getIdentity();
+        const principal = identity.getPrincipal().toString();
+        return principal;
     }
 }
 

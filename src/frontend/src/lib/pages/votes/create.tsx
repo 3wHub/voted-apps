@@ -70,19 +70,11 @@ export default function CreateVote() {
                 }));
 
            
-            const formatDate = (date: Date): string => {
-                const isoString = date.toISOString();
-                if (isNaN(date.getTime())) {
-                    throw new Error("Invalid date value");
-                }
-                return isoString;
-            };
-
-            const formattedStartDate = formatDate(startDate);
-            const formattedEndDate = formatDate(endDate);
-
-            if (new Date(formattedStartDate) >= new Date(formattedEndDate)) {
-                throw new Error("End date must be after start date");
+            const startISO = startDate.toISOString();
+            const endISO = endDate.toISOString();
+            
+            if (new Date(startISO) >= new Date(endISO)) {
+              throw new Error("End date must be after start date");
             }
 
             const result = await createPoll(
@@ -90,8 +82,8 @@ export default function CreateVote() {
                 description.trim(),
                 pollOptions,
                 tags,
-                new Date(startDate).toISOString(),
-                new Date(endDate).toISOString()
+                startISO,
+                endISO
             );
 
             if (!result?.id) {
@@ -179,8 +171,8 @@ export default function CreateVote() {
                         onClick={() => setOptions([...options, ''])}
                         className="mt-2 text-sm text-orange-600 hover:text-orange-800"
                     >
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" className="size-6">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="size-6">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                         </svg>
                         Add Option
                     </button>
@@ -198,8 +190,8 @@ export default function CreateVote() {
                                     onClick={() => setTags(tags.filter(t => t !== tag))}
                                     className="ml-1.5 inline-flex text-orange-400 hover:text-orange-600"
                                 >
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" className="size-6">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="size-6">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
                                     </svg>
 
                                 </button>
