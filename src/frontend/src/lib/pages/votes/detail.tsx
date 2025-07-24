@@ -12,6 +12,7 @@ interface PollOption {
 interface Poll {
   id: string;
   question: string;
+  description: string;
   options: PollOption[];
   tags: string[];
   total_votes: number;
@@ -70,6 +71,7 @@ export default function DetailVote() {
         <div className="flex justify-between items-start mb-4">
           <h5 className="text-2xl font-light text-gray-900">{poll.question}</h5>
         </div>
+        <p className="text-sm font-light text-gray-900">{poll.description}</p>
 
         {poll.tags.length > 0 && (
           <div className="mb-4">
