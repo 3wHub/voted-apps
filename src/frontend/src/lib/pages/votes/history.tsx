@@ -225,7 +225,7 @@ export default function History() {
 
                                     <div className="flex justify-between items-center pt-2 border-t">
                                         <Link
-                                            to={`/vote/${poll.id}`}
+                                            to={`/votes/${poll.id}`}
                                             className="text-sm font-medium text-orange-600 hover:text-orange-500"
                                         >
                                             View details
