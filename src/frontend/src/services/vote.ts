@@ -31,6 +31,10 @@ export type VoteRecord = {
   votedAt: string;
 };
 
+type BackendResponse<T> = [] | [T];
+type BackendOptionalResponse<T> = BackendResponse<T> | undefined | null;
+
+
 export const createPoll = async (
   question: string,
   description: string,
@@ -39,79 +43,104 @@ export const createPoll = async (
   start_date: string,
   end_date: string,
 ): Promise<Poll> => {
-  try {
-    const agentId = (await whoAmI()).toString();
+  const agentId = (await whoAmI()).toString();
+  if (!agentId) throw new Error('Authentication required');
 
-    if (!agentId) throw new Error('Authentication required');
+  const result = await backend.createPoll(
+    question,
+    description,
+    options,
+    tags,
+    start_date,
+    end_date,
+    agentId
+  );
 
-    const result = await backend.createPoll(
-      question,
-      description,
-      options,
-      tags,
-      start_date,
-      end_date,
-      agentId
-    );
-
-    if (!result.id) throw new Error('Invalid response');
-    return result;
-  } catch (error) {
-    throw error;
-  }
+  if (!result?.id) throw new Error('Failed to create poll');
+  return result;
 };
 
-
 export const getPoll = async (id: string): Promise<Poll | null> => {
-  const result = await backend.getPoll(id);
-  return result ? result[0] : null;
+  try {
+    const result = await backend.getPoll(id) as BackendResponse<Poll> | undefined;
+    if (!result) return null;
+    if (result.length === 0) return null;
+    if (!result[0]) return null;
+
+    return result[0];
+  } catch (error) {
+    return null;
+  }
 };
 
 export const getMyPolls = async (): Promise<Poll[]> => {
   const agentId = (await whoAmI()).toString();
   if (!agentId) throw new Error('Authentication required');
-  const result = await backend.getMyPolls(agentId);
-  return result ?? [];
+  return await backend.getMyPolls(agentId) as Poll[];
 };
 
 export const getAllPolls = async (): Promise<Poll[]> => {
-  const result = await backend.getAllPolls();
-  return result ?? [];
+  return await backend.getAllPolls() as Poll[];
 };
 
 export const getPollsByTag = async (tag: string): Promise<Poll[]> => {
-  const result = await backend.getPollsByTag(tag);
-  return result ?? [];
+  return await backend.getPollsByTag(tag) as Poll[];
 };
 
-export const getPollsByAgent = async (): Promise<Poll[]> => {
-  const agentId = (await whoAmI()).toString();
-  if (!agentId) throw new Error('Authentication required');
-  const result = await backend.getPollsByAgent(agentId);
-  return result ?? [];
+export const getPollsByAgent = async (agentId: string): Promise<Poll[]> => {
+  return await backend.getPollsByAgent(agentId) as Poll[];
 };
 
 export const castVote = async (pollId: string, optionId: string): Promise<Poll | null> => {
-  const result = await backend.castVote(pollId, optionId);
-  return result ? result[0] : null;
+  try {
+    const result = await backend.castVote(pollId, optionId) as BackendResponse<Poll>;
+    if (!result) return null;
+    if (result.length === 0) return null;
+    if (!result[0]) return null;
+    return result[0];
+  } catch (error) {
+    return null;
+  }
 };
 
 export const getVotesForPoll = async (pollId: string): Promise<VoteRecord[]> => {
-  const result = await backend.getVotesForPoll(pollId);
-  return result ?? [];
+  return await backend.getVotesForPoll(pollId) as VoteRecord[];
 };
 
 export const hasVoted = async (pollId: string): Promise<boolean> => {
-  const result = await backend.hasVoted(pollId);
-  return result ?? false;
+  return await backend.hasVoted(pollId) as boolean;
 };
 
 export const getPollOptions = async (pollId: string): Promise<PollOption[]> => {
-  const result = await backend.getPollOptions(pollId);
-  return result ?? [];
+  try {
+    const response = await backend.getPollOptions(pollId);
+    const result = response as BackendOptionalResponse<PollOption[]>;
+    
+    if (!result) return [];
+    if (result.length === 0) return [];
+    
+    const options = result[0];
+    return Array.isArray(options) ? options : [];
+  } catch (error) {
+    return [];
+  }
 };
 
-export const getVoteCountForOption = async (pollId: string, optionId: string): Promise<number> => {
-  const result = await backend.getVoteCountForOption(pollId, optionId);
-  return result ? result[0] : 0;
+export const getVoteCountForOption = async (
+  pollId: string,
+  optionId: string
+): Promise<number> => {
+  try {
+    const response = await backend.getVoteCountForOption(pollId, optionId);
+    const result = response as BackendOptionalResponse<number>;
+    
+    if (!result) return 0;
+    if (result.length === 0) return 0;
+    
+    const count = result[0];
+    return typeof count === 'number' ? count : 0;
+  } catch (error) {
+    console.error('Error fetching vote count:', error);
+    return 0;
+  }
 };
