@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Container from '@/lib/pages/components/Container';
-import { getPollsByAgent } from '@/services/vote';
+import { getMyPolls } from '@/services/vote';
 import { Poll } from '@/services/vote';
 
 export default function History() {
@@ -15,7 +15,7 @@ export default function History() {
         const fetchPolls = async () => {
             try {
                 setLoading(true);
-                const allPolls = await getPollsByAgent();
+                const allPolls = await getMyPolls();
                 setPolls(allPolls);
             } catch (err) {
                 console.log('Failed to fetch polls:', err);

@@ -7,6 +7,7 @@ export type PollOption = {
 export type Poll = {
     id: string;
     question: string;
+    description: string;
     options: PollOption[];
     tags: string[];
     total_votes: number;

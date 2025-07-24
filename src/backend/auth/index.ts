@@ -3,18 +3,6 @@ import { IDL, Principal, query, update } from 'azle';
 export class Auth {
     private currentUser: Principal | null = null;
 
-    @query([], IDL.Principal)
-    getCurrentUser(): Principal {
-        if (!this.currentUser) {
-            throw new Error('Not authenticated');
-        }
-        return this.currentUser;
-    }
-
-    @update([], IDL.Bool)
-    isAuthenticated(): boolean {
-        return this.currentUser !== null;
-    }
 
     @update([IDL.Principal], IDL.Bool)
     login(principal: Principal): boolean {
@@ -28,11 +16,22 @@ export class Auth {
         return true;
     }
 
+    @query([], IDL.Principal)
+    getCurrentUser(): Principal {
+        if (!this.currentUser) {
+            throw new Error('Not authenticated');
+        }
+        return this.currentUser;
+    }
+
+    @query([], IDL.Bool)
+    isAuthenticated(): boolean {
+        return !this.getCurrentUser().isAnonymous();
+    }
+
     @query([], IDL.Text)
     whoAmI(): string {
-        return this.isAuthenticated() 
-            ? this.currentUser!.toString()
-            : 'Anonymous';
+        return this.getCurrentUser().toString();
     }
 }
 

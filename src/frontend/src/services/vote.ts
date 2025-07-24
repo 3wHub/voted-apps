@@ -1,4 +1,5 @@
 import { createActor, canisterId } from '../../../declarations/backend';
+import { whoAmI } from './auth';
 
 const backend = createActor(canisterId);
 
@@ -11,6 +12,7 @@ export type PollOption = {
 export type Poll = {
   id: string;
   question: string;
+  description: string;
   options: PollOption[];
   tags: string[];
   total_votes: number;
@@ -31,50 +33,34 @@ export type VoteRecord = {
 
 export const createPoll = async (
   question: string,
+  description: string,
   options: PollOption[],
   tags: string[],
   start_date: string,
   end_date: string,
 ): Promise<Poll> => {
   try {
-    if (!question.trim()) {
-      throw new Error('Poll question cannot be empty');
-    }
-    if (options.length < 2) {
-      throw new Error('At least two options are required');
-    }
-    if (!start_date || !end_date) {
-      throw new Error('Both start and end dates are required');
-    }
-    if (new Date(start_date) >= new Date(end_date)) {
-      throw new Error('End date must be after start date');
-    }
+    const agentId = (await whoAmI()).toString();
+
+    if (!agentId) throw new Error('Authentication required');
 
     const result = await backend.createPoll(
       question,
+      description,
       options,
-      tags.filter(t => t.trim()),
+      tags,
       start_date,
-      end_date
+      end_date,
+      agentId
     );
-    console.log('Raw response:', result);
 
-    if (!result) {
-      throw new Error('Poll creation failed - no ID returned from server');
-    }
-
+    if (!result.id) throw new Error('Invalid response');
     return result;
   } catch (error) {
-    console.error('Full error:', error);
-    if (error instanceof Error) {
-      if (error.message.includes('unexpected end of buffer')) {
-        throw new Error('Data format mismatch with backend. Please check the API contract.');
-      }
-      throw error; 
-    }
-    throw new Error('Failed to create poll due to an unknown error');
+    throw error;
   }
 };
+
 
 export const getPoll = async (id: string): Promise<Poll | null> => {
   const result = await backend.getPoll(id);
@@ -82,7 +68,9 @@ export const getPoll = async (id: string): Promise<Poll | null> => {
 };
 
 export const getMyPolls = async (): Promise<Poll[]> => {
-  const result = await backend.getMyPolls();
+  const agentId = (await whoAmI()).toString();
+  if (!agentId) throw new Error('Authentication required');
+  const result = await backend.getMyPolls(agentId);
   return result ?? [];
 };
 
@@ -97,7 +85,9 @@ export const getPollsByTag = async (tag: string): Promise<Poll[]> => {
 };
 
 export const getPollsByAgent = async (): Promise<Poll[]> => {
-  const result = await backend.getPollsByAgent();
+  const agentId = (await whoAmI()).toString();
+  if (!agentId) throw new Error('Authentication required');
+  const result = await backend.getPollsByAgent(agentId);
   return result ?? [];
 };
 

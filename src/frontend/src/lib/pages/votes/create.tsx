@@ -53,6 +53,14 @@ export default function CreateVote() {
                 throw new Error("Poll title cannot be empty");
             }
 
+            if (options.length < 2) {
+                throw new Error("At least two options are required");
+            }
+
+            if (!startDate || !endDate) {
+                throw new Error("Both start and end dates are required");
+            }
+
             const pollOptions = options
                 .filter(opt => opt.trim())
                 .map((opt, index) => ({
@@ -61,46 +69,29 @@ export default function CreateVote() {
                     votes: 0
                 }));
 
-            if (pollOptions.length < 2) {
-                throw new Error("At least two options are required");
-            }
-
-            if (!startDate || !endDate) {
-                throw new Error("Both start and end dates are required");
-            }
-
-            if (startDate >= endDate) {
-                throw new Error("End date must be after start date");
-            }
-
-            const validateAndFormatDate = (date: Date): string => {
+           
+            const formatDate = (date: Date): string => {
                 const isoString = date.toISOString();
-                if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/.test(isoString)) {
-                  throw new Error(`Invalid date format generated: ${isoString}`);
+                if (isNaN(date.getTime())) {
+                    throw new Error("Invalid date value");
                 }
                 return isoString;
-              };
-              
-              const formattedStartDate = validateAndFormatDate(startDate);
-              const formattedEndDate = validateAndFormatDate(endDate);
+            };
+
+            const formattedStartDate = formatDate(startDate);
+            const formattedEndDate = formatDate(endDate);
 
             if (new Date(formattedStartDate) >= new Date(formattedEndDate)) {
                 throw new Error("End date must be after start date");
             }
 
-            console.log('Creating poll with:', {
-                title: title.trim(),
-                options: pollOptions,
-                tags: tags.filter(t => t.trim()),
-                start_date: formattedStartDate,
-                end_date: formattedEndDate,
-            });
             const result = await createPoll(
                 title.trim(),
+                description.trim(),
                 pollOptions,
-                tags.filter(t => t.trim()),
-                formattedStartDate,
-                formattedEndDate
+                tags,
+                new Date(startDate).toISOString(),
+                new Date(endDate).toISOString()
             );
 
             if (!result?.id) {
@@ -109,17 +100,11 @@ export default function CreateVote() {
 
             navigate(`/votes/history`);
         } catch (err) {
-            console.error('Full error:', err);
+            console.error('Poll creation error:', err);
 
             let errorMessage = 'Failed to create poll';
-
             if (err instanceof Error) {
-                if (err.message.includes("unexpected end of buffer") ||
-                    err.message.includes("Invalid data format")) {
-                    errorMessage = "Server response format error. Please contact support.";
-                } else if (err.message.includes("network")) {
-                    errorMessage = "Network issues detected. Please check your connection.";
-                } else if (err.message.includes("IDL")) {
+                if (err.message.includes("unexpected end of buffer")) {
                     errorMessage = "Data format mismatch with server. Please check your inputs.";
                 } else {
                     errorMessage = err.message;
@@ -279,3 +264,4 @@ export default function CreateVote() {
         </Container>
     );
 }
+

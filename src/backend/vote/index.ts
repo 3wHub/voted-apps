@@ -13,14 +13,17 @@ export class Votes {
   @update(
     [
       IDL.Text,
+      IDL.Text,
       IDL.Vec(IDL.Record({ id: IDL.Text, label: IDL.Text, votes: IDL.Nat32 })),
       IDL.Vec(IDL.Text),
+      IDL.Text,
       IDL.Text,
       IDL.Text,
     ],
     IDL.Record({
       id: IDL.Text,
       question: IDL.Text,
+      description: IDL.Text,
       options: IDL.Vec(IDL.Record({ id: IDL.Text, label: IDL.Text, votes: IDL.Nat32 })),
       tags: IDL.Vec(IDL.Text),
       total_votes: IDL.Nat32,
@@ -33,85 +36,46 @@ export class Votes {
   )
   createPoll(
     question: string,
+    description: string,
     options: PollOption[],
     tags: string[],
     start_date: string,
     end_date: string,
+    agentId: string,
   ): Poll {
     try {
-      if (!authInstance.isAuthenticated()) {
-        throw new Error('Authentication required');
-      }
-
-      const agentId = authInstance.getCurrentUser().toString();
-      if (!agentId) {
-        throw new Error('User must be logged in to create a poll');
-      }
-
-      if (!question?.trim()) {
-        throw new Error('Poll question cannot be empty');
-      }
-
-      if (!options || options.length < 2) {
-        throw new Error('At least two options are required');
-      }
-
-      const optionLabels = new Set<string>();
-      for (const opt of options) {
-        if (!opt.label?.trim()) {
-          throw new Error('Option labels cannot be empty');
-        }
-        if (optionLabels.has(opt.label.trim().toLowerCase())) {
-          throw new Error(`Duplicate option: "${opt.label}"`);
-        }
-        optionLabels.add(opt.label.trim().toLowerCase());
-      }
-
-      if (!start_date || !end_date) {
-        throw new Error('Both start and end dates are required');
-      }
-
-      const now = new Date();
-      const nowISO = now.toISOString();
-      const pollId = uuidv4();
-
-      const processedOptions = options.map((opt) => ({
-        id: opt.id || uuidv4(),
-        label: opt.label.trim(),
-        votes: 0,
-      }));
+      const now = new Date().toISOString();
+      const id = uuidv4();
 
       const poll: Poll = {
-        id: pollId,
-        question: question.trim(),
-        options: processedOptions,
-        tags: tags ? tags.filter((t) => t.trim()) : [],
+        id,
+        question,
+        description,
+        options,
+        tags,
         total_votes: 0,
         start_date,
         end_date,
-        created_at: nowISO,
-        updated_at: nowISO,
-        created_by: agentId,
+        created_at: now,
+        updated_at: now,
+        created_by: agentId
       };
 
-      this.polls.insert(poll.id, poll);
+      this.polls.insert(id, poll);
 
-      let agentPollSet = this.agentPolls.get(agentId) || new Set();
-      agentPollSet.add(poll.id);
-      this.agentPolls.insert(agentId, agentPollSet);
+      const existingSet = this.agentPolls.get(agentId) ?? new Set<string>();
+      existingSet.add(id);
+      this.agentPolls.insert(agentId, existingSet);
 
       return poll;
     } catch (error) {
-      console.error('Poll creation failed:', error);
-      if (error instanceof Error) {
-        throw new Error(`Failed to create poll: ${error.message}`);
-      }
-      throw new Error('Failed to create poll due to an unexpected error');
+      console.error('Backend poll creation failed:', error);
+      throw error;
     }
   }
 
   @query(
-    [],
+    [IDL.Text],
     IDL.Vec(
       IDL.Record({
         id: IDL.Text,
@@ -127,11 +91,7 @@ export class Votes {
       }),
     ),
   )
-  getMyPolls(): Poll[] {
-    if (!authInstance.isAuthenticated()) {
-      throw new Error('Authentication required');
-    }
-    const agentId = authInstance.getCurrentUser().toString();
+  getMyPolls(agentId: string): Poll[] {
     const agentPollSet = this.agentPolls.get(agentId);
     if (!agentPollSet) return [];
 
@@ -226,11 +186,9 @@ export class Votes {
       }),
     ),
   )
-  getPollsByAgent(): Poll[] {
-    if (!authInstance.isAuthenticated()) {
-      throw new Error('Authentication required');
-    }
-    const agentId = authInstance.getCurrentUser().toString();
+  getPollsByAgent(agentId: string): Poll[] {
+    const agentPollSet = this.agentPolls.get(agentId);
+    if (!agentPollSet) return [];
     const allPolls = Array.from(this.polls.values());
     return allPolls.filter((poll) => poll.created_by === agentId);
   }
@@ -345,4 +303,22 @@ export class Votes {
   }
 }
 
+export const Polls = IDL.Record({
+  id: IDL.Text,
+  question: IDL.Text,
+  description: IDL.Text,
+  tags: IDL.Vec(IDL.Text),
+  start_date: IDL.Text,
+  end_date: IDL.Text,
+  created_by: IDL.Text,
+  created_at: IDL.Text,
+  updated_at: IDL.Text,
+  total_votes: IDL.Nat32,
+  options: IDL.Vec(IDL.Record({
+    id: IDL.Text,
+    label: IDL.Text,
+    votes: IDL.Nat32
+  }))
+});
 export const votesInstance = new Votes();
+

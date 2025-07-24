@@ -51,6 +51,7 @@ async function initActor(): Promise<_SERVICE> {
   }
 }
 
+
 export async function login(): Promise<string> {
   return new Promise((resolve, reject) => {
     authClient.login({
@@ -91,6 +92,16 @@ export async function logout(): Promise<string> {
     actor = null;
     return "Logged out locally";
   }
+}
+
+export async function getActor(): Promise<_SERVICE> {
+  if (!actor) {
+    if (!authClient) {
+      await initAuthClient();
+    }
+    actor = await initActor();
+  }
+  return actor;
 }
 
 export async function whoAmI(): Promise<string> {
