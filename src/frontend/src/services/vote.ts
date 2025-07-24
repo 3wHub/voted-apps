@@ -107,7 +107,8 @@ export const getPollsByAgent = async (): Promise<Poll[]> => {
 
 export const castVote = async (pollId: string, optionId: string): Promise<Poll | null> => {
   try {
-    const result = await backend.castVote(pollId, optionId);
+    const agentId = (await whoAmI()).toString();
+    const result = await backend.castVote(agentId,pollId, optionId);
     return result?.[0] ?? null;
   } catch (error) {
     console.error(`Failed to cast vote for poll ${pollId}:`, error);
@@ -120,7 +121,8 @@ export const getVotesForPoll = async (pollId: string): Promise<VoteRecord[]> => 
 };
 
 export const hasVoted = async (pollId: string): Promise<boolean> => {
-  return await backend.hasVoted(pollId) as boolean;
+  const agentId = (await whoAmI()).toString();
+  return await backend.hasVoted(agentId,pollId) as boolean;
 };
 
 export const getPollOptions = async (pollId: string): Promise<PollOption[]> => {

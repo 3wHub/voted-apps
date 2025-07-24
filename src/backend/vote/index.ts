@@ -1,6 +1,5 @@
 import { IDL, StableBTreeMap, update, query } from 'azle';
 import { v4 as uuidv4 } from 'uuid';
-import { authInstance } from '../auth';
 import { PollOption, Poll, VoteRecord } from '../types';
 
 export class Votes {
@@ -225,7 +224,7 @@ export class Votes {
   }
 
   @update(
-    [IDL.Text, IDL.Text],
+    [IDL.Text, IDL.Text, IDL.Text],
     IDL.Opt(
       IDL.Record({
         id: IDL.Text,
@@ -240,8 +239,8 @@ export class Votes {
       }),
     ),
   )
-  castVote(pollId: string, optionId: string): [Poll] | [] {
-    const voterId = authInstance.getCurrentUser().toString();
+  castVote(agentId: string, pollId: string, optionId: string): [Poll] | [] {
+    let voterId = agentId;
     const poll = this.polls.get(pollId);
     if (!poll) return [];
 
@@ -302,10 +301,9 @@ export class Votes {
     return this.votes.values().filter((vote) => vote.pollId === pollId);
   }
 
-  @query([IDL.Text], IDL.Bool)
-  hasVoted(pollId: string): boolean {
-    const voterId = authInstance.getCurrentUser().toString();
-    const voterPolls = this.voterRecords.get(voterId);
+  @query([IDL.Text, IDL.Text], IDL.Bool)
+  hasVoted(agentId: string, pollId: string): boolean {
+    const voterPolls = this.voterRecords.get(agentId);
     return voterPolls ? voterPolls.includes(pollId) : false;
   }
 

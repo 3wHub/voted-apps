@@ -24,13 +24,13 @@ export default class VotingBackend {
 
   @update(
     [
-      IDL.Text, 
-      IDL.Text, 
-      IDL.Vec(IDL.Record({ id: IDL.Text, label: IDL.Text, votes: IDL.Nat32 })), 
-      IDL.Vec(IDL.Text), 
-      IDL.Text, 
-      IDL.Text, 
-      IDL.Text, 
+      IDL.Text,
+      IDL.Text,
+      IDL.Vec(IDL.Record({ id: IDL.Text, label: IDL.Text, votes: IDL.Nat32 })),
+      IDL.Vec(IDL.Text),
+      IDL.Text,
+      IDL.Text,
+      IDL.Text,
     ],
     PollsIdl
   )
@@ -79,9 +79,9 @@ export default class VotingBackend {
     return votesInstance.getPollsByAgent(agentId);
   }
 
-  @update([IDL.Text, IDL.Text], IDL.Opt(PollsIdl))
-  castVote(pollId: string, optionId: string): [] | [Poll] {
-    return votesInstance.castVote(pollId, optionId);
+  @update([IDL.Text, IDL.Text, IDL.Text], IDL.Opt(PollsIdl))
+  castVote(agentId: string, pollId: string, optionId: string): [] | [Poll] {
+    return votesInstance.castVote(agentId, pollId, optionId);
   }
 
   @query([IDL.Text], IDL.Vec(IDL.Record({
@@ -95,9 +95,9 @@ export default class VotingBackend {
     return votesInstance.getVotesForPoll(pollId);
   }
 
-  @query([IDL.Text], IDL.Bool)
-  hasVoted(pollId: string): boolean {
-    return votesInstance.hasVoted(pollId);
+  @query([IDL.Text, IDL.Text], IDL.Bool)
+  hasVoted(agentId: string, pollId: string): boolean {
+    return votesInstance.hasVoted(agentId, pollId);
   }
 
   @query([IDL.Text], IDL.Opt(IDL.Vec(IDL.Record({
@@ -122,12 +122,12 @@ export const idlFactory = ({ IDL }: { IDL: IDLType }) => {
     logout: IDL.Func([], [IDL.Text], ['update']),
     createPoll: IDL.Func(
       [
-        IDL.Text, 
+        IDL.Text,
         IDL.Text,
         IDL.Vec(PollOptionIdl),
         IDL.Vec(IDL.Text),
-        IDL.Text, 
-        IDL.Text, 
+        IDL.Text,
+        IDL.Text,
         IDL.Text
       ],
       [PollsIdl],

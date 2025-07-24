@@ -4,7 +4,7 @@ import type { IDL } from '@dfinity/candid';
 
 export interface _SERVICE {
   'castVote' : ActorMethod<
-    [string, string],
+    [string, string, string],
     [] | [
       {
         'id' : string,
@@ -164,7 +164,7 @@ export interface _SERVICE {
       }
     >
   >,
-  'hasVoted' : ActorMethod<[string], boolean>,
+  'hasVoted' : ActorMethod<[string, string], boolean>,
   'login' : ActorMethod<[], string>,
   'logout' : ActorMethod<[], string>,
   'whoAmI' : ActorMethod<[], undefined>,

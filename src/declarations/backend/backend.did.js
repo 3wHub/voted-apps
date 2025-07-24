@@ -1,7 +1,7 @@
 export const idlFactory = ({ IDL }) => {
   return IDL.Service({
     'castVote' : IDL.Func(
-        [IDL.Text, IDL.Text],
+        [IDL.Text, IDL.Text, IDL.Text],
         [
           IDL.Opt(
             IDL.Record({
@@ -236,7 +236,7 @@ export const idlFactory = ({ IDL }) => {
         ],
         ['query'],
       ),
-    'hasVoted' : IDL.Func([IDL.Text], [IDL.Bool], ['query']),
+    'hasVoted' : IDL.Func([IDL.Text, IDL.Text], [IDL.Bool], ['query']),
     'login' : IDL.Func([], [IDL.Text], []),
     'logout' : IDL.Func([], [IDL.Text], []),
     'whoAmI' : IDL.Func([], [], ['query']),

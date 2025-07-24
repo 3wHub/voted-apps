@@ -1,7 +1,8 @@
 import { useParams } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import Container from '@/lib/pages/components/Container';
-import { getPoll } from '@/services/vote';
+import { getPoll, castVote, hasVoted } from '@/services/vote';
+import { whoAmI } from '@/services/auth';
 
 interface PollOption {
   id: string;
@@ -18,20 +19,38 @@ interface Poll {
   total_votes: number;
   created_at: string;
   updated_at: string;
+  created_by: string;
 }
 
 export default function DetailVote() {
   const { id } = useParams();
   const [poll, setPoll] = useState<Poll | null>(null);
   const [loading, setLoading] = useState(true);
+  const [userHasVoted, setUserHasVoted] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [isCreator, setIsCreator] = useState(false);
 
   useEffect(() => {
     if (!id) return;
 
-    const fetchPoll = async () => {
+    const fetchPollAndUserStatus = async () => {
       try {
-        const data = await getPoll(id);
+        const [data, userId] = await Promise.all([
+          getPoll(id),
+          whoAmI().then(res => res?.toString() || null)
+        ]);
+        
         setPoll(data);
+        setCurrentUserId(userId);
+        
+        if (userId) {
+          const [hasVotedResult] = await Promise.all([
+            hasVoted(id),
+          ]);
+          
+          setUserHasVoted(hasVotedResult);
+          setIsCreator(data?.created_by === userId);
+        }
       } catch (err) {
         console.error('Failed to fetch poll:', err);
       } finally {
@@ -39,8 +58,22 @@ export default function DetailVote() {
       }
     };
 
-    fetchPoll();
+    fetchPollAndUserStatus();
   }, [id]);
+
+  const handleVote = async (optionId: string) => {
+    if (!id || !currentUserId) return;
+    
+    try {
+      const updatedPoll = await castVote(id, optionId);
+      if (updatedPoll) {
+        setPoll(updatedPoll);
+        setUserHasVoted(true);
+      }
+    } catch (err) {
+      console.error('Failed to cast vote:', err);
+    }
+  };
 
   const calculatePercentage = (votes: number) => {
     const total = poll?.options.reduce((sum, option) => sum + option.votes, 0) ?? 0;
@@ -61,6 +94,8 @@ export default function DetailVote() {
       </div>
     );
   }
+
+  const canVote = currentUserId && !userHasVoted && !isCreator;
 
   return (
     <Container>
@@ -101,6 +136,16 @@ export default function DetailVote() {
                   ></div>
                 </div>
               </div>
+              {canVote && (
+                <div className="px-4 pb-3">
+                  <button
+                    onClick={() => handleVote(option.id)}
+                    className="w-full py-1 text-sm text-blue-600 hover:text-blue-800"
+                  >
+                    Vote for this option
+                  </button>
+                </div>
+              )}
             </li>
           ))}
         </ul>
@@ -108,6 +153,18 @@ export default function DetailVote() {
         <div className="text-sm text-center text-gray-600">
           Total votes: {poll.total_votes}
         </div>
+        
+        {userHasVoted && (
+          <div className="mt-2 text-sm text-center text-green-600">
+            You have already voted in this poll.
+          </div>
+        )}
+        
+        {isCreator && (
+          <div className="mt-2 text-sm text-center text-gray-600">
+            You created this poll and cannot vote.
+          </div>
+        )}
       </div>
     </Container>
   );
