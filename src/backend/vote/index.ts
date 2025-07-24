@@ -9,31 +9,6 @@ export class Votes {
   private voterRecords = new StableBTreeMap<string, Set<string>>(2);
   private agentPolls = new StableBTreeMap<string, Set<string>>(3);
 
-
-  @update(
-    [
-      IDL.Text,
-      IDL.Text,
-      IDL.Vec(IDL.Record({ id: IDL.Text, label: IDL.Text, votes: IDL.Nat32 })),
-      IDL.Vec(IDL.Text),
-      IDL.Text,
-      IDL.Text,
-      IDL.Text,
-    ],
-    IDL.Record({
-      id: IDL.Text,
-      question: IDL.Text,
-      description: IDL.Text,
-      options: IDL.Vec(IDL.Record({ id: IDL.Text, label: IDL.Text, votes: IDL.Nat32 })),
-      tags: IDL.Vec(IDL.Text),
-      total_votes: IDL.Nat32,
-      created_at: IDL.Text,
-      start_date: IDL.Text,
-      end_date: IDL.Text,
-      updated_at: IDL.Text,
-      created_by: IDL.Text,
-    }),
-  )
   createPoll(
     question: string,
     description: string,
@@ -41,179 +16,69 @@ export class Votes {
     tags: string[],
     start_date: string,
     end_date: string,
-    agentId: string,
+    agentId: string
   ): Poll {
-    try {
-      const now = new Date().toISOString();
-      const id = uuidv4();
+    const now = new Date().toISOString();
+    const id = uuidv4();
 
-      const poll: Poll = {
-        id,
-        question,
-        description,
-        options,
-        tags,
-        total_votes: 0,
-        start_date,
-        end_date,
-        created_at: now,
-        updated_at: now,
-        created_by: agentId
-      };
 
-      this.polls.insert(id, poll);
+    const poll: Poll = {
+      id,
+      question,
+      description,
+      options: options.map(opt => ({
+        ...opt,
+        votes: 0
+      })),
+      tags,
+      total_votes: 0,
+      start_date,
+      end_date,
+      created_at: now,
+      updated_at: now,
+      created_by: agentId
+    };
 
-      const existingSet = this.agentPolls.get(agentId) ?? new Set<string>();
-      existingSet.add(id);
-      this.agentPolls.insert(agentId, existingSet);
+    this.polls.insert(id, poll);
 
-      return poll;
-    } catch (error) {
-      console.error('Backend poll creation failed:', error);
-      throw error;
-    }
+    const agentPolls = this.agentPolls.get(agentId) ?? new Set<string>();
+    agentPolls.add(id);
+    this.agentPolls.insert(agentId, agentPolls);
+
+    return poll;
   }
 
-  @query(
-    [IDL.Text],
-    IDL.Vec(
-      IDL.Record({
-        id: IDL.Text,
-        question: IDL.Text,
-        options: IDL.Vec(IDL.Record({ id: IDL.Text, label: IDL.Text, votes: IDL.Nat32 })),
-        tags: IDL.Vec(IDL.Text),
-        total_votes: IDL.Nat32,
-        created_at: IDL.Text,
-        start_date: IDL.Text,
-        end_date: IDL.Text,
-        updated_at: IDL.Text,
-        created_by: IDL.Text,
-      }),
-    ),
-  )
   getMyPolls(agentId: string): Poll[] {
-    const agentPollSet = this.agentPolls.get(agentId);
-    if (!agentPollSet) return [];
+    const agentPollIds = this.agentPolls.get(agentId);
+    if (!agentPollIds) return [];
 
-    return Array.from(agentPollSet)
-      .map((pollId) => this.polls.get(pollId))
-      .filter((poll) => poll !== undefined) as Poll[];
+    return Array.from(agentPollIds)
+      .map(pollId => this.polls.get(pollId))
+      .filter((poll): poll is Poll => poll !== undefined);
   }
 
-  @query(
-    [IDL.Text],
-    IDL.Opt(
-      IDL.Record({
-        id: IDL.Text,
-        question: IDL.Text,
-        options: IDL.Vec(IDL.Record({ id: IDL.Text, label: IDL.Text, votes: IDL.Nat32 })),
-        tags: IDL.Vec(IDL.Text),
-        total_votes: IDL.Nat32,
-        created_at: IDL.Text,
-        start_date: IDL.Text,
-        end_date: IDL.Text,
-        updated_at: IDL.Text,
-        created_by: IDL.Text,
-      }),
-    ),
-  )
   getPoll(id: string): [] | [Poll] {
     const poll = this.polls.get(id);
     return poll ? [poll] : [];
   }
 
-  @query(
-    [],
-    IDL.Vec(
-      IDL.Record({
-        id: IDL.Text,
-        question: IDL.Text,
-        options: IDL.Vec(IDL.Record({ id: IDL.Text, label: IDL.Text, votes: IDL.Nat32 })),
-        tags: IDL.Vec(IDL.Text),
-        total_votes: IDL.Nat32,
-        created_at: IDL.Text,
-        start_date: IDL.Text,
-        end_date: IDL.Text,
-        updated_at: IDL.Text,
-        created_by: IDL.Text,
-      }),
-    ),
-  )
   getAllPolls(): Poll[] {
     return this.polls.values();
   }
 
-  @query(
-    [IDL.Text],
-    IDL.Vec(
-      IDL.Record({
-        id: IDL.Text,
-        question: IDL.Text,
-        options: IDL.Vec(IDL.Record({ id: IDL.Text, label: IDL.Text, votes: IDL.Nat32 })),
-        tags: IDL.Vec(IDL.Text),
-        total_votes: IDL.Nat32,
-        created_at: IDL.Text,
-        start_date: IDL.Text,
-        end_date: IDL.Text,
-        updated_at: IDL.Text,
-      }),
-    ),
-  )
   getPollsByTag(tag: string): Poll[] {
-    return this.polls.values().filter((poll) => poll.tags.includes(tag));
+    return this.polls.values().filter(poll => poll.tags.includes(tag));
   }
 
-  @query(
-    [],
-    IDL.Vec(
-      IDL.Record({
-        id: IDL.Text,
-        question: IDL.Text,
-        options: IDL.Vec(
-          IDL.Record({
-            id: IDL.Text,
-            label: IDL.Text,
-            votes: IDL.Nat32,
-          }),
-        ),
-        tags: IDL.Vec(IDL.Text),
-        total_votes: IDL.Nat32,
-        created_at: IDL.Text,
-        start_date: IDL.Text,
-        end_date: IDL.Text,
-        updated_at: IDL.Text,
-        created_by: IDL.Text,
-      }),
-    ),
-  )
   getPollsByAgent(agentId: string): Poll[] {
-    const agentPollSet = this.agentPolls.get(agentId);
-    if (!agentPollSet) return [];
-    const allPolls = Array.from(this.polls.values());
-    return allPolls.filter((poll) => poll.created_by === agentId);
+    return this.polls.values().filter(poll => poll.created_by === agentId);
   }
 
-  @update(
-    [IDL.Text, IDL.Text],
-    IDL.Opt(
-      IDL.Record({
-        id: IDL.Text,
-        question: IDL.Text,
-        options: IDL.Vec(IDL.Record({ id: IDL.Text, label: IDL.Text, votes: IDL.Nat32 })),
-        tags: IDL.Vec(IDL.Text),
-        total_votes: IDL.Nat32,
-        created_at: IDL.Text,
-        start_date: IDL.Text,
-        end_date: IDL.Text,
-        updated_at: IDL.Text,
-      }),
-    ),
-  )
-  castVote(pollId: string, optionId: string): [Poll] | [] {
+  castVote(pollId: string, optionId: string): [] | [Poll] {
     const voterId = authInstance.getCurrentUser().toString();
     const poll = this.polls.get(pollId);
+    
     if (!poll) return [];
-
     if (poll.created_by === voterId) {
       throw new Error('Poll creators cannot vote on their own polls');
     }
@@ -223,7 +88,7 @@ export class Votes {
       throw new Error('You have already voted in this poll');
     }
 
-    const optionIndex = poll.options.findIndex((opt) => opt.id === optionId);
+    const optionIndex = poll.options.findIndex(opt => opt.id === optionId);
     if (optionIndex === -1) return [];
 
     const updatedOptions = [...poll.options];
@@ -255,54 +120,28 @@ export class Votes {
     return [updatedPoll];
   }
 
-  @query(
-    [IDL.Text],
-    IDL.Vec(
-      IDL.Record({
-        id: IDL.Text,
-        pollId: IDL.Text,
-        optionId: IDL.Text,
-        voterId: IDL.Text,
-        votedAt: IDL.Text,
-      }),
-    ),
-  )
   getVotesForPoll(pollId: string): VoteRecord[] {
-    return this.votes.values().filter((vote) => vote.pollId === pollId);
+    return this.votes.values().filter(vote => vote.pollId === pollId);
   }
 
-  @query([IDL.Text], IDL.Bool)
   hasVoted(pollId: string): boolean {
     const voterId = authInstance.getCurrentUser().toString();
     const voterPolls = this.voterRecords.get(voterId);
     return voterPolls ? voterPolls.has(pollId) : false;
   }
 
-  @query(
-    [IDL.Text],
-    IDL.Opt(
-      IDL.Vec(
-        IDL.Record({
-          id: IDL.Text,
-          label: IDL.Text,
-          votes: IDL.Nat32,
-        }),
-      ),
-    ),
-  )
   getPollOptions(pollId: string): [] | [PollOption[]] {
     const poll = this.polls.get(pollId);
     return poll ? [poll.options] : [];
   }
 
-  @query([IDL.Text, IDL.Text], IDL.Opt(IDL.Nat32))
   getVoteCountForOption(pollId: string, optionId: string): [] | [number] {
     const poll = this.polls.get(pollId);
-    const option = poll?.options.find((opt) => opt.id === optionId);
+    if (!poll) return [];
+
+    const option = poll.options.find(opt => opt.id === optionId);
     return option ? [option.votes] : [];
   }
 }
 
-
 export const votesInstance = new Votes();
-

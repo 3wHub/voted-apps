@@ -1,5 +1,6 @@
 import { IDL } from "azle";
 
+// TypeScript Types
 export type PollOption = {
     id: string;
     label: string;
@@ -28,20 +29,3 @@ export type VoteRecord = {
     votedAt: string;
 };
 
-export const PollsIdl = IDL.Record({
-    id: IDL.Text,
-    question: IDL.Text,
-    description: IDL.Text,
-    tags: IDL.Vec(IDL.Text),
-    start_date: IDL.Text,
-    end_date: IDL.Text,
-    created_by: IDL.Text,
-    created_at: IDL.Text,
-    updated_at: IDL.Text,
-    total_votes: IDL.Nat32,
-    options: IDL.Vec(IDL.Record({
-      id: IDL.Text,
-      label: IDL.Text,
-      votes: IDL.Nat32
-    }))
-  });

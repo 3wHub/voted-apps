@@ -1,55 +1,38 @@
 import { IDL, update, query } from 'azle';
-import { PollOption, Poll, VoteRecord, PollsIdl } from './types';
+import { PollOption, Poll, VoteRecord } from './types';
+import { PollsIdl, PollOptionIdl, VoteRecordIdl, IDLType } from './types/idl';
 import { votesInstance } from './vote';
-import { Auth } from './auth';
+import { authInstance } from './auth';
 
-export default class {
-  private auth: Auth;
-
-  constructor() {
-    this.auth = new Auth();
-  }
-
+export default class VotingBackend {
   @query([])
   whoAmI(): string {
-    return this.auth.getCurrentUser().toString();
+    return authInstance.getCurrentUser().toString();
   }
 
   @update([], IDL.Text)
   login(): string {
-    const principal = this.auth.getCurrentUser();
+    const principal = authInstance.getCurrentUser();
     return `Login successful. Principal: ${principal.toString()}`;
   }
 
   @update([], IDL.Text)
   logout(): string {
-    this.auth.logout();
+    authInstance.logout();
     return "Logged out successfully";
   }
 
   @update(
     [
-      IDL.Text,
-      IDL.Text,
-      IDL.Vec(IDL.Record({ id: IDL.Text, label: IDL.Text, votes: IDL.Nat32 })),
-      IDL.Vec(IDL.Text),
-      IDL.Text,
-      IDL.Text,
-      IDL.Text,
+      IDL.Text, 
+      IDL.Text, 
+      IDL.Vec(IDL.Record({ id: IDL.Text, label: IDL.Text, votes: IDL.Nat32 })), 
+      IDL.Vec(IDL.Text), 
+      IDL.Text, 
+      IDL.Text, 
+      IDL.Text, 
     ],
-    IDL.Record({
-      id: IDL.Text,
-      question: IDL.Text,
-      description: IDL.Text,
-      options: IDL.Vec(IDL.Record({ id: IDL.Text, label: IDL.Text, votes: IDL.Nat32 })),
-      tags: IDL.Vec(IDL.Text),
-      total_votes: IDL.Nat32,
-      created_at: IDL.Text,
-      start_date: IDL.Text,
-      end_date: IDL.Text,
-      updated_at: IDL.Text,
-      created_by: IDL.Text,
-    })
+    PollsIdl
   )
   createPoll(
     question: string,
@@ -60,7 +43,15 @@ export default class {
     end_date: string,
     agentId: string
   ): Poll {
-    return votesInstance.createPoll(question, description, options, tags, start_date, end_date, agentId);
+    return votesInstance.createPoll(
+      question,
+      description,
+      options,
+      tags,
+      start_date,
+      end_date,
+      agentId
+    );
   }
 
   @query([IDL.Text], IDL.Vec(PollsIdl))
@@ -69,7 +60,7 @@ export default class {
   }
 
   @query([IDL.Text], IDL.Opt(PollsIdl))
-  getPoll(id: string): [Poll] | [] {
+  getPoll(id: string): [] | [Poll] {
     return votesInstance.getPoll(id);
   }
 
@@ -89,7 +80,7 @@ export default class {
   }
 
   @update([IDL.Text, IDL.Text], IDL.Opt(PollsIdl))
-  castVote(pollId: string, optionId: string): [Poll] | [] {
+  castVote(pollId: string, optionId: string): [] | [Poll] {
     return votesInstance.castVote(pollId, optionId);
   }
 
@@ -109,55 +100,37 @@ export default class {
     return votesInstance.hasVoted(pollId);
   }
 
-  @query([IDL.Text], IDL.Opt(IDL.Vec(IDL.Record({ id: IDL.Text, label: IDL.Text, votes: IDL.Nat32 }))))
-  getPollOptions(pollId: string): [PollOption[]] | [] {
+  @query([IDL.Text], IDL.Opt(IDL.Vec(IDL.Record({
+    id: IDL.Text,
+    label: IDL.Text,
+    votes: IDL.Nat32
+  }))))
+  getPollOptions(pollId: string): [] | [PollOption[]] {
     return votesInstance.getPollOptions(pollId);
   }
 
   @query([IDL.Text, IDL.Text], IDL.Opt(IDL.Nat32))
-  getVoteCountForOption(pollId: string, optionId: string): [number] | [] {
+  getVoteCountForOption(pollId: string, optionId: string): [] | [number] {
     return votesInstance.getVoteCountForOption(pollId, optionId);
   }
 }
 
-
-// --- IDL Factory ---
-export const idlFactory = ({ IDL }: { IDL: typeof import('azle').IDL }) => {
-  const PollOption = IDL.Record({
-    id: IDL.Text,
-    label: IDL.Text,
-    votes: IDL.Nat32,
-  });
-
-  const Poll = IDL.Record({
-    id: IDL.Text,
-    question: IDL.Text,
-    description: IDL.Text,
-    options: IDL.Vec(PollOption),
-    tags: IDL.Vec(IDL.Text),
-    total_votes: IDL.Nat32,
-    created_at: IDL.Text,
-    start_date: IDL.Text,
-    end_date: IDL.Text,
-    updated_at: IDL.Text,
-    created_by: IDL.Text,
-  });
-
-  const VoteRecord = IDL.Record({
-    id: IDL.Text,
-    pollId: IDL.Text,
-    optionId: IDL.Text,
-    voterId: IDL.Text,
-    votedAt: IDL.Text,
-  });
-
+export const idlFactory = ({ IDL }: { IDL: IDLType }) => {
   return IDL.Service({
     whoAmI: IDL.Func([], [IDL.Text], ['query']),
     login: IDL.Func([], [IDL.Text], ['update']),
     logout: IDL.Func([], [IDL.Text], ['update']),
     createPoll: IDL.Func(
-      [IDL.Text, IDL.Text, IDL.Vec(PollOption), IDL.Vec(IDL.Text), IDL.Text, IDL.Text, IDL.Text],
-      [Poll],
+      [
+        IDL.Text, 
+        IDL.Text,
+        IDL.Vec(PollOptionIdl),
+        IDL.Vec(IDL.Text),
+        IDL.Text, 
+        IDL.Text, 
+        IDL.Text
+      ],
+      [PollsIdl],
       ['update']
     ),
     getAllPolls: IDL.Func([], [IDL.Vec(PollsIdl)], ['query']),
@@ -166,8 +139,8 @@ export const idlFactory = ({ IDL }: { IDL: typeof import('azle').IDL }) => {
     getPollsByTag: IDL.Func([IDL.Text], [IDL.Vec(PollsIdl)], ['query']),
     getPollsByAgent: IDL.Func([IDL.Text], [IDL.Vec(PollsIdl)], ['query']),
     castVote: IDL.Func([IDL.Text, IDL.Text], [IDL.Opt(PollsIdl)], ['update']),
-    getVotesForPoll: IDL.Func([IDL.Text], [IDL.Vec(VoteRecord)], ['query']),
-    getPollOptions: IDL.Func([IDL.Text], [IDL.Opt(IDL.Vec(PollOption))], ['query']),
+    getVotesForPoll: IDL.Func([IDL.Text], [IDL.Vec(VoteRecordIdl)], ['query']),
+    getPollOptions: IDL.Func([IDL.Text], [IDL.Opt(IDL.Vec(PollOptionIdl))], ['query']),
     getVoteCountForOption: IDL.Func([IDL.Text, IDL.Text], [IDL.Opt(IDL.Nat32)], ['query']),
     hasVoted: IDL.Func([IDL.Text], [IDL.Bool], ['query']),
   });
