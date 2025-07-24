@@ -101,6 +101,8 @@ export default function DetailVote() {
     <Container>
       <div className="block p-6 mb-5 border border-gray-200 rounded-lg shadow-sm bg-white">
         <span className="text-sm text-gray-500">
+          {/* TODO: add view range start and end time to vote */}
+          
           Created: {new Date(poll.created_at).toLocaleDateString()}
         </span>
         <div className="flex justify-between items-start mb-4">
