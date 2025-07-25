@@ -51,7 +51,7 @@ VoteD addresses these challenges by leveraging blockchain technology to build a 
 
 ### 1. Prerequisites
 
-- [Node.js](https://nodejs.org/) (v18+ recommended)
+- [Node.js](https://nodejs.org/) (v22+ recommended)
 - [DFX SDK](https://internetcomputer.org/docs/current/developer-docs/cli-reference/dfx-tool/) (`dfx`)
 - [Docker](https://www.docker.com/) (for local replica)
 - [Git](https://git-scm.com/)
@@ -60,7 +60,7 @@ VoteD addresses these challenges by leveraging blockchain technology to build a 
 ### 2. Clone the Repository
 
 ```sh
-git clone https://github.com/your-username/voted-apps.git
+git clone https://github.com/3wHub/voted-apps.git
 cd voted-apps
 ```
 
