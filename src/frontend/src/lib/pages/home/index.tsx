@@ -4,6 +4,7 @@ import Container from '@/lib/pages/components/Container';
 import { getAllPolls, hasVoted } from '@/services/vote';
 import { Spinner, Badge, Alert, Button, Card } from 'flowbite-react';
 import { formatDate } from '@/lib/helpers/formatDate';
+import { useAuth } from '@/lib/helpers/useAuth';
 
 interface PollOption {
   id: string;
@@ -32,6 +33,7 @@ const sortOptions: { value: SortOptionValue; label: string }[] = [
 ];
 
 export default function Home() {
+  const { isLoggedIn, handleLogin } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [dateFilter, setDateFilter] = useState('');
@@ -332,20 +334,35 @@ export default function Home() {
 
                           {/* Action Button */}
                           <div className="flex justify-end">
-                            <NavLink
-                              to={`/votes/${poll.id}`}
-                              className={`
-                                inline-flex items-center justify-center
-                                text-sm font-medium rounded-lg p-1 border
-                                transition-colors duration-200
-                                ${votedPolls[poll.id]
-                                  ? "text-gray-700 bg-gray-100 border-gray-300 hover:bg-gray-200"
-                                  : "text-white bg-orange-500 border-orange-500 hover:bg-orange-600"
-                                }
-                              `}
-                            >
-                              {votedPolls[poll.id] ? 'View Results' : 'Vote Now'}
-                            </NavLink>
+                            {isLoggedIn ? (
+                              <NavLink
+                                to={`/votes/${poll.id}`}
+                                className={`
+                                  inline-flex items-center justify-center
+                                  text-sm font-medium rounded-lg p-1 border
+                                  transition-colors duration-200
+                                  ${votedPolls[poll.id]
+                                                              ? "text-gray-700 bg-gray-100 border-gray-300 hover:bg-gray-200"
+                                                              : "text-white bg-orange-500 border-orange-500 hover:bg-orange-600"
+                                                            }
+                                `}
+                              >
+                                {votedPolls[poll.id] ? 'View Results' : 'Vote Now'}
+                              </NavLink>
+                            ) : (
+                              <button
+                                onClick={handleLogin}
+                                disabled={loading}
+                                className={`
+                                  inline-flex items-center justify-center
+                                  text-sm font-medium rounded-lg p-1 border
+                                  transition-colors duration-200
+                                  text-white bg-orange-500 border-orange-500 hover:bg-orange-600
+                                `}
+                              >
+                                {loading ? "Loading..." : "Login to Vote"}
+                              </button>
+                            )}
                           </div>
                         </Card>
                       );
