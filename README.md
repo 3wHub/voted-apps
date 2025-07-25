@@ -2,6 +2,10 @@
 
 VoteD is a full-stack decentralized voting application built on the [Internet Computer](https://internetcomputer.org/) blockchain. It leverages Azle (TypeScript/JavaScript CDK) for smart contract (canister) development and React for the frontend, providing a secure, transparent, and user-friendly voting platform.
 
+Traditional voting systems often suffer from a lack of transparency, limited accessibility, and vulnerability to manipulation. These issues can lead to low voter turnout and make it difficult to verify the legitimacy of results. Geographical or physical barriers can further restrict participation, resulting in unfair representation.
+
+VoteD addresses these challenges by leveraging blockchain technology to build a voting system that is secure, transparent, and tamper-proof. Every vote is immutable and verifiable, and the platform ensures universal accessibility, allowing anyone to participate regardless of location. By doing so, VoteD aims to restore public trust and encourage greater participation in democratic processes.
+
 ---
 
 ## 🚀 Features
@@ -47,7 +51,7 @@ VoteD is a full-stack decentralized voting application built on the [Internet Co
 
 ### 1. Prerequisites
 
-- [Node.js](https://nodejs.org/) (v18+ recommended)
+- [Node.js](https://nodejs.org/) (v22+ recommended)
 - [DFX SDK](https://internetcomputer.org/docs/current/developer-docs/cli-reference/dfx-tool/) (`dfx`)
 - [Docker](https://www.docker.com/) (for local replica)
 - [Git](https://git-scm.com/)
@@ -56,7 +60,7 @@ VoteD is a full-stack decentralized voting application built on the [Internet Co
 ### 2. Clone the Repository
 
 ```sh
-git clone https://github.com/your-username/voted-apps.git
+git clone https://github.com/3wHub/voted-apps.git
 cd voted-apps
 ```
 
