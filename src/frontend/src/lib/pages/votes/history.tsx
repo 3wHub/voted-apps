@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import Container from '@/lib/pages/components/Container';
 import { getPollsByAgent } from '@/services/vote';
 import { Poll } from '@/services/vote';
+import { formatDate } from '@/lib/helpers/formatDate';
 
 export default function History() {
     const [polls, setPolls] = useState<Poll[]>([]);
@@ -38,17 +39,6 @@ export default function History() {
 
         return true;
     });
-
-    const formatDate = (dateString: string) => {
-        const options: Intl.DateTimeFormatOptions = {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-        };
-        return new Date(dateString).toLocaleDateString(undefined, options);
-    };
 
     if (loading) {
         return (

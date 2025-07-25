@@ -13,8 +13,25 @@ body {
   font-size: 1.5rem;
 }
 
-.bg-primary {
-  background-color: #f2992d;
+.btn-primary {
+  background-color: #ff6724;
+  border-color: #ff6724;
+}
+.btn-primary:hover {
+  background-color: #e55c20;
+  border-color: #e55c20;
+}
+.badge-primary {
+  background-color: #ff6724;
+}
+.border-primary {
+  border-color: #ff6724;
+}
+.text-primary {
+  color: #ff6724;
+}
+.focus-ring-primary:focus {
+  ring-color: #ff6724;
 }
 
 .bg-secondary {

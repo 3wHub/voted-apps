@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import Container from '@/lib/pages/components/Container';
 import { getAllPolls, hasVoted } from '@/services/vote';
-import { Spinner } from 'flowbite-react';
+import { Spinner, Badge, Alert, Button, Card } from 'flowbite-react';
+import { formatDate } from '@/lib/helpers/formatDate';
 
 interface PollOption {
   id: string;
@@ -15,8 +16,9 @@ interface Poll {
   question: string;
   tags: string[];
   total_votes: number;
+  start_date: string;
+  end_date: string;
   created_at: string;
-  updated_at: string;
   options: PollOption[];
 }
 
@@ -29,7 +31,6 @@ const sortOptions: { value: SortOptionValue; label: string }[] = [
   { value: "leastVotes", label: "Least Votes" },
 ];
 
-
 export default function Home() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
@@ -39,8 +40,6 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [votedPolls, setVotedPolls] = useState<Record<string, boolean>>({});
-
-
 
   useEffect(() => {
     let isMounted = true;
@@ -117,232 +116,244 @@ export default function Home() {
         default:
           return 0;
       }
-    })
+    });
 
+  const getPollStatus = (startDate: string, endDate: string) => {
+    const now = new Date();
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+
+    if (now < start) return { text: 'Upcoming', color: 'purple' };
+    if (now > end) return { text: 'Closed', color: 'red' };
+    return { text: 'Active', color: 'success' };
+  };
 
   return (
-    <Container>
-      {/* Filters Section */}
-      <div className="mb-8 p-4 bg-white rounded-lg shadow-lg border border-gray-200">
-        <h2 className="text-xl font-semibold mb-4">Filter Polls</h2>
+    <div className="">
+      <Container>
+        <div className="flex flex-col lg:flex-row gap-6">
+          {/* Filters Sidebar */}
+          <div className="lg:w-1/4">
+            <Card className="mb-6 bg-white border border-orange-100 shadow-sm dark:bg-white">
+              <h2 className="text-xl font-bold mb-4 text-gray-800">Filter Polls</h2>
 
-        {/* Search Filter */}
-        <div className="mb-4">
-          <label htmlFor="search" className="block text-sm font-medium text-gray-700 mb-1">
-            Search
-          </label>
-          <input
-            type="text"
-            id="search"
-            placeholder="Type to search..."
-            className="w-full text-sm p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
+              {/* Search Filter */}
+              <div className="mb-4">
+                <label htmlFor="search" className="block mb-2 text-sm font-medium text-gray-700">
+                  Search
+                </label>
+                <input
+                  type="text"
+                  id="search"
+                  placeholder="Type to search..."
+                  className="w-full p-2.5 text-sm border border-gray-300 rounded-lg focus:ring-orange-500 focus:border-orange-500"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
 
-        {/* Tags Filter */}
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-1">Tags</label>
-          <div className="flex flex-wrap gap-2">
-            {allTags.map((tag) => (
-              <button
-                key={tag}
-                onClick={() => toggleTag(tag)}
-                className={`px-3 py-1.5 text-xs rounded-full border transition-colors ${selectedTags.includes(tag)
-                  ? 'bg-blue-100 text-blue-800 border-blue-400 hover:bg-blue-200'
-                  : 'bg-gray-100 text-gray-800 border-gray-300 hover:bg-gray-200'
-                  }`}
-              >
-                {tag}
-              </button>
-            ))}
+              {/* Tags Filter */}
+              <div className="mb-4">
+                <label className="block mb-2 text-sm font-medium text-gray-700">Tags</label>
+                <div className="flex flex-wrap gap-2">
+                  {allTags.map((tag) => (
+                    <Badge
+                      key={tag}
+                      color={selectedTags.includes(tag) ? "orange" : "gray"}
+                      onClick={() => toggleTag(tag)}
+                      className="cursor-pointer hover:bg-orange-100 transition-colors"
+                    >
+                      {tag}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+
+              {/* Date Filter */}
+              <div className="mb-4">
+                <label htmlFor="date-filter" className="block mb-2 text-sm font-medium text-gray-700">
+                  Created Date
+                </label>
+                <div className="relative">
+                  <input
+                    type="date"
+                    id="date-filter"
+                    className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-orange-500 focus:border-orange-500 block w-full p-2.5"
+                    value={dateFilter}
+                    onChange={(e) => setDateFilter(e.target.value)}
+                  />
+                  {dateFilter && (
+                    <button
+                      className="absolute right-2.5 top-2.5 text-gray-400 hover:text-gray-600"
+                      onClick={() => setDateFilter('')}
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Sort Filter */}
+              <div className="mb-4">
+                <label htmlFor="sort" className="block mb-2 text-sm font-medium text-gray-700">
+                  Sort By
+                </label>
+                <select
+                  id="sort"
+                  className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-orange-500 focus:border-orange-500 block w-full p-2.5"
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value as SortOptionValue)}
+                >
+                  {sortOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Clear All Filters */}
+              {(searchTerm || selectedTags.length > 0 || dateFilter) && (
+                <Button
+                  color="light"
+                  onClick={() => {
+                    setSearchTerm('');
+                    setSelectedTags([]);
+                    setDateFilter('');
+                  }}
+                  className="w-full text-orange-600 hover:text-orange-800"
+                >
+                  Clear all filters
+                </Button>
+              )}
+            </Card>
           </div>
-        </div>
 
-        {/* Date Filter */}
-        <div className="mb-4">
-          <label htmlFor="date-filter" className="block text-sm font-medium text-gray-700 mb-1">
-            Date
-          </label>
-          <div className="flex items-center gap-2">
-            <input
-              type="date"
-              id="date-filter"
-              className="w-full text-sm p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-              value={dateFilter}
-              onChange={(e) => setDateFilter(e.target.value)}
-            />
-            {dateFilter && (
-              <button
-                className="p-2 text-gray-500 hover:text-gray-700 transition-colors"
-                onClick={() => setDateFilter('')}
-                aria-label="Clear date filter"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="size-6">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
-                </svg>
+          {/* Main Content */}
+          <div className="lg:w-3/4 ">
+            {/* Loading State */}
+            {loading && (
+              <div className="text-center py-10">
+                <Spinner size="xl" color="orange" className="mx-auto mb-4" />
+                <p className="text-gray-500">Loading polls...</p>
+              </div>
+            )}
 
-              </button>
+            {/* Error State */}
+            {error && (
+              <Alert color="failure" className="mb-6">
+                <div className="flex flex-col items-center text-center">
+                  <span className="font-medium">Error loading polls</span>
+                  <p className="mt-2 text-sm">{error}</p>
+                  <Button
+                    color="orange"
+                    className="mt-4"
+                    onClick={() => window.location.reload()}
+                  >
+                    Try Again
+                  </Button>
+                </div>
+              </Alert>
+            )}
+
+            {/* Success State */}
+            {!loading && !error && (
+              <>
+                {/* No Results */}
+                {filteredPolls.length === 0 ? (
+                  <Card className="text-center py-10 bg-white border border-orange-100 dark:bg-white">
+                    <p className="text-gray-500 mb-4">
+                      {polls.length === 0
+                        ? 'No polls available yet. Be the first to create one!'
+                        : 'No polls match your current filters.'}
+                    </p>
+                    <Button
+                      color="orange"
+                      onClick={() => {
+                        setSearchTerm('');
+                        setSelectedTags([]);
+                        setDateFilter('');
+                      }}
+                    >
+                      Clear filters
+                    </Button>
+                  </Card>
+                ) : (
+                  /* Polls List */
+                  <div className="grid grid-cols-1 gap-4">
+                    {filteredPolls.map((poll) => {
+                      const status = getPollStatus(poll.start_date, poll.end_date);
+
+                      return (
+                        <Card
+                          key={poll.id}
+                          className="hover:shadow-md transition-shadow bg-white border border-orange-100 dark:bg-white "
+                        >
+                          {/* Status Badge */}
+                          <div className="flex justify-between items-start">
+                            <Badge
+                              color={status.color}
+                              className="mb-2"
+                            >
+                              {status.text}
+                            </Badge>
+                            <span className="text-sm text-gray-500">
+                              {poll.total_votes} vote{poll.total_votes !== 1 ? 's' : ''}
+                            </span>
+                          </div>
+
+                          {/* Poll Metadata */}
+                          <div className="flex flex-col sm:flex-row sm:justify-between gap-2 text-sm text-gray-500 mb-3">
+                            <span>Start: {formatDate(poll.start_date)}</span>
+                            <span>End: {formatDate(poll.end_date)}</span>
+                          </div>
+
+                          {/* Poll Question */}
+                          <h3 className="text-xl font-bold text-gray-900 mb-3 line-clamp-2">
+                            {poll.question}
+                          </h3>
+
+                          {/* Tags */}
+                          <div className="flex flex-wrap gap-2 mb-4">
+                            {poll.tags.map((tag) => (
+                              <Badge
+                                key={`${poll.id}-${tag}`}
+                                color={selectedTags.includes(tag) ? "orange" : "gray"}
+                                onClick={() => toggleTag(tag)}
+                                className="cursor-pointer hover:bg-orange-100 transition-colors"
+                              >
+                                {tag}
+                              </Badge>
+                            ))}
+                          </div>
+
+                          {/* Action Button */}
+                          <div className="flex justify-end">
+                            <NavLink
+                              to={`/votes/${poll.id}`}
+                              className={`
+                                inline-flex items-center justify-center
+                                text-sm font-medium rounded-lg p-1 border
+                                transition-colors duration-200
+                                ${votedPolls[poll.id]
+                                  ? "text-gray-700 bg-gray-100 border-gray-300 hover:bg-gray-200"
+                                  : "text-white bg-orange-500 border-orange-500 hover:bg-orange-600"
+                                }
+                              `}
+                            >
+                              {votedPolls[poll.id] ? 'View Results' : 'Vote Now'}
+                            </NavLink>
+                          </div>
+                        </Card>
+                      );
+                    })}
+                  </div>
+                )}
+              </>
             )}
           </div>
         </div>
-
-        {/* Sort Filter */}
-        <div className="mb-4">
-          <label htmlFor="sort" className="block text-sm font-medium text-gray-700 mb-1">
-            Sort By
-          </label>
-          <select
-            id="sort"
-            className="w-full text-sm p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value as SortOptionValue)}
-          >
-            {sortOptions.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {/* Clear All Filters */}
-        {(searchTerm || selectedTags.length > 0 || dateFilter) && (
-          <div className="mt-4">
-            <button
-              className="flex items-center gap-1 text-sm text-red-500 hover:text-red-700 transition-colors"
-              onClick={() => {
-                setSearchTerm('');
-                setSelectedTags([]);
-                setDateFilter('');
-                setSortBy('newest');
-              }}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="size-6">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
-              </svg>
-
-              Clear all filters
-            </button>
-          </div>
-        )}
-      </div>
-
-      {/* Polls List Section */}
-      <div className="grid grid-cols-1 gap-5">
-        {/* Loading State */}
-        {loading && (
-          <div className="text-center py-10">
-            <Spinner className="mx-auto h-8 w-8 text-gray-400" />
-            <p className="mt-2 text-gray-500">Loading polls...</p>
-          </div>
-        )}
-
-        {/* Error State */}
-        {error && (
-          <div className="text-center py-10">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="size-6 text-red-400">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
-            </svg>
-
-            <p className="mt-2 text-red-500">Error: {error}</p>
-            <button
-              className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
-              onClick={() => window.location.reload()}
-            >
-              Retry
-            </button>
-          </div>
-        )}
-
-        {/* Success State */}
-        <div className="text-base">
-          {!loading && !error && (
-            <>
-              {/* No Results */}
-              {filteredPolls.length === 0 ? (
-                <div className="text-center py-10 bg-white rounded-lg border border-gray-200">
-                  <p className="text-gray-500">
-                    {polls.length === 0
-                      ? 'No polls available yet. Be the first to create one!'
-                      : 'No polls match your current filters.'}
-                  </p>
-                  <button
-                    className="mt-4 px-4 py-1.5 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
-                    onClick={() => {
-                      setSearchTerm('');
-                      setSelectedTags([]);
-                      setDateFilter('');
-                    }}
-                  >
-                    Clear filters
-                  </button>
-                </div>
-              ) : (
-                /* Polls List */
-                filteredPolls.map((poll) => (
-                  <div
-                    key={poll.id}
-                    className="block p-6 border border-gray-200 rounded-lg shadow-sm hover:shadow-md bg-white transition-all duration-200"
-                  >
-                    {/* Poll Metadata */}
-                    <div className="flex justify-between items-start">
-                      <span className="text-xs text-gray-500">
-                        {new Date(poll.created_at).toLocaleDateString('en-US', {
-                          year: 'numeric',
-                          month: 'short',
-                          day: 'numeric'
-                        })}
-                      </span>
-                      {poll.created_at && (
-                        <span className="text-xs text-gray-500">
-                          {poll.created_at}
-                        </span>
-                      )}
-                    </div>
-
-                    {/* Poll Question */}
-                    <h3 className="mt-2 mb-3 text-xl font-semibold text-gray-900">
-                      {poll.question}
-                    </h3>
-
-                    {/* Tags */}
-                    <div className="mb-4 flex flex-wrap gap-2">
-                      {poll.tags.map((tag) => (
-                        <button
-                          key={`${poll.id}-${tag}`}
-                          type="button"
-                          className={`py-1.5 px-3 text-xs font-medium rounded-full border transition-colors ${selectedTags.includes(tag)
-                            ? 'bg-gray-800 text-white border-gray-800'
-                            : 'text-gray-900 bg-white border-gray-200 hover:bg-gray-100'
-                            }`}
-                          onClick={() => toggleTag(tag)}
-                        >
-                          {tag}
-                        </button>
-                      ))}
-                    </div>
-
-                    {/* Footer */}
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-500">
-                        {poll.total_votes} vote{poll.total_votes !== 1 ? 's' : ''}
-                      </span>
-                      <NavLink
-                        to={`/votes/${poll.id}`}
-                        className="text-white bg-gray-800 hover:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-500 font-medium rounded-lg text-sm px-5 py-2.5 transition-colors"
-                      >
-                        {votedPolls[poll.id] ? 'View Results' : 'Vote Now'}
-                      </NavLink>
-                    </div>
-                  </div>
-                ))
-              )}
-            </>
-          )}
-        </div>
-      </div>
-    </Container>
+      </Container>
+    </div>
   );
 }
