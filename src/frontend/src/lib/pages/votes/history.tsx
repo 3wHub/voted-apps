@@ -80,7 +80,7 @@ export default function History() {
         <Container>
             <div className="mb-8">
                 <h1 className="text-2xl font-bold mb-2">Voting History</h1>
-                <p className="text-gray-600">View all polls created by users</p>
+                <p className="text-gray-600 text-lg">View all polls created by users</p>
             </div>
 
             <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -88,7 +88,7 @@ export default function History() {
                     <input
                         type="text"
                         placeholder="Search polls..."
-                        className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                        className="w-full pl-10 pr-4 py-2 text-base border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                     />
@@ -243,4 +243,3 @@ export default function History() {
         </Container>
     );
 }
-
