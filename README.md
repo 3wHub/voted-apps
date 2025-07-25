@@ -1,80 +1,148 @@
-<<<<<<< HEAD
-# voted-apps
-=======
-# ICP Development Environment with Azle and React
+# VoteD: Web3 Blockchain Voting App on Internet Computer
 
-This template gives you everything you need to build a full-stack Web3 application on the [Internet Computer](https://internetcomputer.org/).
-It includes a frontend built with Vite and React, and a backend written in JS/TS (Azle).
+VoteD is a full-stack decentralized voting application built on the [Internet Computer](https://internetcomputer.org/) blockchain. It leverages Azle (TypeScript/JavaScript CDK) for smart contract (canister) development and React for the frontend, providing a secure, transparent, and user-friendly voting platform.
 
-## Get started with one click:
-### Locally:
+---
 
-Make sure you have you have the latest version of Docker (e.g. >25) and VS Code installed and running, then click the button below
+## 🚀 Features
 
-[![Open locally in Dev Containers](https://img.shields.io/static/v1?label=Dev%20Containers&message=Open&color=blue&logo=visualstudiocode)](https://vscode.dev/redirect?url=vscode://ms-vscode-remote.remote-containers/cloneInVolume?url=https://github.com/fxgst/azle-react)
+- **Create Polls:** Authenticated users can create polls with multiple options, tags, and custom date ranges.
+- **Vote:** Users can vote on polls (except their own) and only once per poll.
+- **View Results:** Poll results are displayed with vote counts and percentages.
+- **Voting History:** Users can view polls they have created.
+- **Authentication:** Secure login/logout using Internet Identity.
+- **Blockchain Backend:** All poll and vote data is stored on-chain via Azle canisters.
+- **Tag & Search:** Filter and search polls by tags, date, and keywords.
+- **Responsive UI:** Modern, mobile-friendly interface using Tailwind CSS and Flowbite React.
 
-### In your browser:
+---
 
-In Gitpod 
+## 🛠️ Tech Stack
 
-[![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/fxgst/azle-react/)
+- **Smart Contracts:** [Azle](https://github.com/demergent-labs/azle) (TypeScript/JavaScript CDK for Internet Computer)
+- **Frontend:** [React](https://react.dev/), [Vite](https://vitejs.dev/)
+- **Styling:** [Tailwind CSS](https://tailwindcss.com/), [Flowbite React](https://flowbite-react.com/)
+- **Authentication:** [DFINITY Internet Identity](https://identity.ic0.app/)
+- **ICP Local Development:** [DFX](https://internetcomputer.org/docs/current/developer-docs/cli-reference/dfx-tool/)
 
-or GitHub Codespaces
+---
 
-[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/fxgst/azle-react/?quickstart=1)
+## 📁 Project Structure
 
-
-## 🚀 Develop
-
-When the editor opened, run the following commands to start a local ICP node and deploy the canister smart contract:
-
-```bash
-npm install # Install dependencies
-dfx start --clean # Start a local ICP node
-# In a new terminal window:
-dfx deploy # Deploy smart contract locally
+```
+.
+├── src/
+│ ├── backend/ # Azle canister (smart contract) code
+│ ├── frontend/ # React frontend app
+│ └── declarations/ # Auto-generated canister bindings
+├── dfx.json # DFX project config
+├── package.json # Workspace root scripts
+├── .env # Canister IDs and environment variables
+└── README.md # Project documentation
 ```
 
-If you are developing in Github Codespaces, run `./canister_urls.py` to get the correct canister URLs.
-For Gitpod, use the URLs that start with `http://127.0.0.1`.
+---
 
-To interact with the backend canister smart contract, you can use `dfx` on the command line:
+## ⚡ Getting Started
 
-```bash
-dfx canister call backend greet '("Dom")' # Call the greet query function with the argument "Dom"
-# or 
-dfx canister call backend setMessage '("GM")' # Call the setMessage update function
+### 1. Prerequisites
+
+- [Node.js](https://nodejs.org/) (v18+ recommended)
+- [DFX SDK](https://internetcomputer.org/docs/current/developer-docs/cli-reference/dfx-tool/) (`dfx`)
+- [Docker](https://www.docker.com/) (for local replica)
+- [Git](https://git-scm.com/)
+- [npm](https://www.npmjs.com/)
+
+### 2. Clone the Repository
+
+```sh
+git clone https://github.com/your-username/voted-apps.git
+cd voted-apps
 ```
 
-To redeploy the smart contract, run `dfx deploy` again.
+### 3. Install Dependencies
 
-When ready, run `dfx deploy --ic` to deploy your application to the ICP mainnet.
-The command will print a different canister URL for mainnet, ending in `.icp0.io`.
-You can make calls to the smart contract on mainnet just like to the local one!
+```sh
+npm install
+```
 
-## 🛠️ Technology Stack
+### 4. Start the Internet Computer Local Replica
 
-- [Azle CDK](https://demergent-labs.github.io/azle/): the Canister Development Kit for JS/TS
-- [Vite](https://vitejs.dev/): high-performance tooling for front-end web development
-- [React](https://reactjs.org/): a component-based UI library
-- [TypeScript](https://www.typescriptlang.org/): JavaScript extended with syntax for types
+```sh
+dfx start --clean
+```
 
-## 📚 Documentation
+> **Tip:** You may want to run this in a separate terminal window.
 
-- [Azle book](https://demergent-labs.github.io/azle/the_azle_book.html)
-- [Internet Computer docs](https://internetcomputer.org/docs/current/developer-docs/ic-overview)
-- [Internet Computer wiki](https://wiki.internetcomputer.org/)
-- [Internet Computer forum](https://forum.dfinity.org/)
-- [Vite developer docs](https://vitejs.dev/guide/)
-- [React quick start guide](https://react.dev/learn)
-- [`dfx.json` reference schema](https://internetcomputer.org/docs/current/references/dfx-json-reference/)
-- [Developer Experience Feedback Board](https://dx.internetcomputer.org/)
+### 5. Deploy Canisters (Backend & Frontend)
 
-## 💡 Tips and Tricks
+```sh
+dfx deploy
+```
 
-- If you get errors accessing the canister URLs developing remotely, try running `./canister_urls.py` to get the correct URLs.
+This will deploy the Azle backend and the frontend assets to the local replica.
 
-- Run `npm run dev` to see the frontend update live as you make changes.
+### 6. Run the Frontend in Development Mode
 
-- If you get an error "You installed esbuild for another platform than the one you're currently using.", remove the `node_modules` folder and run `npm install` again.
->>>>>>> 2f8044f (feat: init project)
+```sh
+cd src/frontend
+npm run dev
+```
+
+- The app will be available at [http://localhost:5173](http://localhost:5173)
+- The backend canister runs at [http://localhost:4943](http://localhost:4943)
+
+---
+
+## 🌐 Production Build & Deployment
+
+1. **Build the Frontend:**
+
+```sh
+cd src/frontend
+npm run build
+```
+
+2. **Deploy to Mainnet (Internet Computer):**
+
+```sh
+dfx deploy --ic
+```
+
+- Update your `.env` with the mainnet canister IDs as needed.
+- The production frontend will be hosted by the asset canister.
+
+---
+
+## 🧑‍💻 Development Tips
+
+- **Canister URLs:** Use `./canister_urls.py` to print the correct canister URLs for your environment.
+- **Hot Reload:** The frontend supports hot reload with `npm run dev`.
+- **Environment Variables:** Canister IDs and network info are injected via `.env` and Vite config.
+- **Authentication:** Uses Internet Identity for secure, decentralized login.
+
+---
+
+## 📚 Documentation & References
+
+- [Azle Book](https://demergent-labs.github.io/azle/the_azle_book.html)
+- [Internet Computer Docs](https://internetcomputer.org/docs/current/developer-docs/ic-overview)
+- [Vite Docs](https://vitejs.dev/guide/)
+- [React Docs](https://react.dev/learn)
+- [DFX CLI Reference](https://internetcomputer.org/docs/current/references/cli-reference/dfx-tool/)
+
+---
+
+## 🤝 Contributing
+
+Pull requests and issues are welcome! Please open an issue to discuss your ideas or report bugs.
+
+---
+
+## 📝 License
+
+MIT License. See [LICENSE](LICENSE) for details.
+
+---
+
+## 👤
