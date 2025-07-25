@@ -23,18 +23,18 @@ export default function Header() {
         <div className="flex justify-between items-center">
           <div className="flex items-center">
             <NavLink to="/" className="flex items-center">
-              <img src="./voted.png" className="h-15" alt="voteD Logo" />
+              <img src="./voted.png" className="h-14" alt="voteD Logo" />
               <span className="self-center ml-2 text-2xl font-semibold whitespace-nowrap">VoteD</span>
             </NavLink>
           </div>
-          <nav className="flex space-x-8">
+          <nav className="flex space-x-6 text-base">
             {navLinks.map((link) => (
               (!link.protected || isLoggedIn) && (
                 <NavLink
                   key={link.to}
                   to={link.to}
                   className={({ isActive }) =>
-                    `px-3 py-2 rounded-md text-lg font-medium ${
+                    `px-3 py-2 rounded-md font-medium ${
                       isActive
                         ? 'bg-orange-100 text-orange-700'
                         : 'text-gray-700 hover:bg-gray-100'
