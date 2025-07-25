@@ -93,21 +93,6 @@ export default function CreateVote() {
                 }));
 
 
-            const formatDate = (date: Date): string => {
-                const isoString = date.toISOString();
-                if (isNaN(date.getTime())) {
-                    throw new Error("Invalid date value");
-                }
-                return isoString;
-            };
-
-            const formattedStartDate = formatDate(startDate);
-            const formattedEndDate = formatDate(endDate);
-
-            if (new Date(formattedStartDate) >= new Date(formattedEndDate)) {
-                throw new Error("End date must be after start date");
-            }
-
             const result = await createPoll(
                 title.trim(),
                 description.trim(),

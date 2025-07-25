@@ -29,18 +29,12 @@ export default function History() {
 
     const filteredPolls = polls.filter(poll => {
         const now = new Date();
-        const isActive = true;
+        const startDate = new Date(poll.start_date);
+        const endDate = new Date(poll.end_date);
+        const isActive = now >= startDate && now <= endDate;
 
         if (filter === 'active' && !isActive) return false;
         if (filter === 'closed' && isActive) return false;
-
-        if (searchQuery) {
-            const query = searchQuery.toLowerCase();
-            return (
-                poll.question.toLowerCase().includes(query) ||
-                poll.tags.some(tag => tag.toLowerCase().includes(query))
-            );
-        }
 
         return true;
     });
@@ -78,7 +72,7 @@ export default function History() {
 
     return (
         <Container>
-            <div className="mb-8">
+            <div className="mb-8 text-center">
                 <h1 className="text-2xl font-bold mb-2">Voting History</h1>
                 <p className="text-gray-600 text-lg">View all polls created by users</p>
             </div>
@@ -88,7 +82,7 @@ export default function History() {
                     <input
                         type="text"
                         placeholder="Search polls..."
-                        className="w-full pl-10 pr-4 py-2 text-base border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                        className="w-full text-sm pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                     />
@@ -111,19 +105,19 @@ export default function History() {
                 <div className="flex space-x-2">
                     <button
                         onClick={() => setFilter('all')}
-                        className={`px-4 py-2 rounded-lg ${filter === 'all' ? 'bg-orange-600 text-white' : 'bg-gray-200 text-gray-700'}`}
+                        className={`px-4 py-2 text-sm rounded-lg ${filter === 'all' ? 'bg-orange-600 text-white' : 'bg-gray-200 text-gray-700'}`}
                     >
                         All
                     </button>
                     <button
                         onClick={() => setFilter('active')}
-                        className={`px-4 py-2 rounded-lg ${filter === 'active' ? 'bg-orange-600 text-white' : 'bg-gray-200 text-gray-700'}`}
+                        className={`px-4 py-2 text-sm rounded-lg ${filter === 'active' ? 'bg-orange-600 text-white' : 'bg-gray-200 text-gray-700'}`}
                     >
                         Active
                     </button>
                     <button
                         onClick={() => setFilter('closed')}
-                        className={`px-4 py-2 rounded-lg ${filter === 'closed' ? 'bg-orange-600 text-white' : 'bg-gray-200 text-gray-700'}`}
+                        className={`px-4 py-2 text-sm rounded-lg ${filter === 'closed' ? 'bg-orange-600 text-white' : 'bg-gray-200 text-gray-700'}`}
                     >
                         Closed
                     </button>
