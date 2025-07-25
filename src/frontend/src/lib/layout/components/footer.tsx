@@ -28,10 +28,10 @@ export default function Footer() {
           >
             <img
               src="/voted.png"
-              className="h-8"
+              className="h-10 md:h-14"
               alt="voteD Logo"
             />
-            <span className="self-center font-semibold whitespace-nowrap text-gray-900">
+            <span className="self-center font-semibold text-lg sm:text-2xl whitespace-nowrap text-gray-900">
               VoteD
             </span>
           </Link>
