@@ -1,8 +1,10 @@
 service: () -> {
     castVote: (text, text, text) -> (opt record {id:text; updated_at:text; question:text; tags:vec text; description:text; end_date:text; created_at:text; created_by:text; start_date:text; total_votes:nat32; options:vec record {id:text; votes:nat32; label:text}});
     createPoll: (text, text, vec record {id:text; votes:nat32; label:text}, vec text, text, text, text) -> (record {id:text; updated_at:text; question:text; tags:vec text; description:text; end_date:text; created_at:text; created_by:text; start_date:text; total_votes:nat32; options:vec record {id:text; votes:nat32; label:text}});
+    getAgentPlanInfo: (text) -> (record {voteCount:nat32; plan:text; upgradedAt:opt text; lastVoteReset:text; voterCount:nat32}) query;
     getAllPolls: () -> (vec record {id:text; updated_at:text; question:text; tags:vec text; description:text; end_date:text; created_at:text; created_by:text; start_date:text; total_votes:nat32; options:vec record {id:text; votes:nat32; label:text}}) query;
     getMyPolls: (text) -> (vec record {id:text; updated_at:text; question:text; tags:vec text; description:text; end_date:text; created_at:text; created_by:text; start_date:text; total_votes:nat32; options:vec record {id:text; votes:nat32; label:text}}) query;
+    getPlanUsage: (text) -> (record {currentPolls:nat32; currentVoters:nat32; maxOptions:nat32; maxPolls:nat32; maxVoters:nat32; maxTags:nat32; maxVotesPerMonth:nat32; currentVotesThisMonth:nat32}) query;
     getPoll: (text) -> (opt record {id:text; updated_at:text; question:text; tags:vec text; description:text; end_date:text; created_at:text; created_by:text; start_date:text; total_votes:nat32; options:vec record {id:text; votes:nat32; label:text}}) query;
     getPollOptions: (text) -> (opt vec record {id:text; votes:nat32; label:text}) query;
     getPollsByAgent: (text) -> (vec record {id:text; updated_at:text; question:text; tags:vec text; description:text; end_date:text; created_at:text; created_by:text; start_date:text; total_votes:nat32; options:vec record {id:text; votes:nat32; label:text}}) query;
@@ -12,5 +14,6 @@ service: () -> {
     hasVoted: (text, text) -> (bool) query;
     login: () -> (text);
     logout: () -> (text);
+    upgradeToPremium: (text) -> (record {voteCount:nat32; plan:text; upgradedAt:opt text; lastVoteReset:text; voterCount:nat32});
     whoAmI: () -> () query;
 }
