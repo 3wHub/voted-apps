@@ -28,6 +28,7 @@ VoteD addresses these challenges by leveraging blockchain technology to build a 
 - **Styling:** [Tailwind CSS](https://tailwindcss.com/), [Flowbite React](https://flowbite-react.com/)
 - **Authentication:** [DFINITY Internet Identity](https://identity.ic0.app/)
 - **ICP Local Development:** [DFX](https://internetcomputer.org/docs/current/developer-docs/cli-reference/dfx-tool/)
+- **ICP Ledger:** Local ledger canister for token management
 
 ---
 
@@ -70,7 +71,24 @@ cd voted-apps
 npm install
 ```
 
-### 4. Start the Internet Computer Local Replica
+### 4. Set Up Local ICP Ledger
+To test token-related functionality locally, set up the ICP ledger canister:
+```sh
+# 1. Create a new identity that will act as a minting account
+dfx identity new minter
+dfx identity use minter
+export MINTER_ACCOUNT_ID=$(dfx ledger account-id)
+
+# 2. Switch back to your primary default identity
+dfx identity use default
+export DEFAULT_ACCOUNT_ID=$(dfx ledger account-id)
+
+# 3. Update dfx.json with the account IDs
+# Replace the values in your dfx.json under "ledger" configuration
+# with the account IDs you just exported
+```
+
+### 5. Start the Internet Computer Local Replica
 
 ```sh
 dfx start --clean
@@ -78,7 +96,7 @@ dfx start --clean
 
 > **Tip:** You may want to run this in a separate terminal window.
 
-### 5. Deploy Canisters (Backend & Frontend)
+### 6. Deploy Canisters (Backend & Frontend)
 
 ```sh
 dfx deploy
@@ -86,7 +104,7 @@ dfx deploy
 
 This will deploy the Azle backend and the frontend assets to the local replica.
 
-### 6. Run the Frontend in Development Mode
+### 7. Run the Frontend in Development Mode
 
 ```sh
 cd src/frontend
@@ -124,6 +142,7 @@ dfx deploy --ic
 - **Hot Reload:** The frontend supports hot reload with `npm run dev`.
 - **Environment Variables:** Canister IDs and network info are injected via `.env` and Vite config.
 - **Authentication:** Uses Internet Identity for secure, decentralized login.
+- **Local Ledger:** For local testing, mint tokens to your account using the minter identity.
 
 ---
 
@@ -134,6 +153,7 @@ dfx deploy --ic
 - [Vite Docs](https://vitejs.dev/guide/)
 - [React Docs](https://react.dev/learn)
 - [DFX CLI Reference](https://internetcomputer.org/docs/current/references/cli-reference/dfx-tool/)
+- [ICP Ledger Documentation](https://internetcomputer.org/docs/defi/token-ledgers/setup/icp_ledger_setup)
 
 ---
 
