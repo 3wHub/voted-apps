@@ -14,6 +14,7 @@
     "@dfinity/auth-client": "^3.2.1",
     "@dfinity/candid": "^3.2.1",
     "@dfinity/ledger-icp": "^4.1.0",
+    "@dfinity/nns": "^9.1.0",
     "@dfinity/principal": "^3.2.1",
     "@dfinity/utils": "^2.14.0",
     "@types/date-fns": "^2.5.3",
