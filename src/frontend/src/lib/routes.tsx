@@ -11,9 +11,22 @@ import ProtectedRoute from '@/lib/layout/components/ProtectedRoute';
 import { WalletPage } from './pages/wallet';
 
 export const routes: RouteObject[] = [
-    {
-        path: '/',
-        element: <Layout />,
+  {
+    path: '/',
+    element: <Layout />,
+    children: [
+      { index: true, element: <Home /> },
+      { path: 'about', element: <About /> },
+      {
+        path: 'plan',
+        element: (
+          <ProtectedRoute>
+            <Plan />
+          </ProtectedRoute>
+        )
+      },
+      {
+        path: 'votes',
         children: [
             { index: true, element: <Home /> },
             { path: 'about', element: <About /> },
