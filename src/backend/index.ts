@@ -115,13 +115,13 @@ export default class VotingBackend {
     return votesInstance.getVoteCountForOption(pollId, optionId);
   }
 
-  @update([IDL.Text], IDL.Record({
-    plan: IDL.Text,
+  @update([IDL.Text], IDL.Record({ 
+    plan: IDL.Text, 
     upgradedAt: IDL.Opt(IDL.Text),
     voteCount: IDL.Nat32,
     lastVoteReset: IDL.Text,
     voterCount: IDL.Nat32
-  }))
+}))
   upgradeToPremium(agentId: string) {
     return plan.upgradeToPremium(agentId);
   }
