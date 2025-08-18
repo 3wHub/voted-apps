@@ -7,7 +7,7 @@ export default function ProtectedRoute({ children }: { children: JSX.Element }) 
     
     if (loading) {
         return (
-            <div className="flex items-center">
+            <div className="flex items-center justify-center">
                 <Spinner aria-label="Loading..." size="sm" />
                 <span className="pl-3">Loading...</span>
             </div>
