@@ -13,6 +13,8 @@ export default function Plan() {
       features: [
         "Up to 5 active votes per month",
         "Maximum 100 voters per vote",
+        "Maximum 5 options per poll",
+        "Maximum 3 tags per poll",
       ],
       cta: isLoggedIn ? "Current Plan" : "Get Started",
       highlight: false,
@@ -25,6 +27,8 @@ export default function Plan() {
       features: [
         "Unlimited polls",
         "Unlimited voters",
+        "Up to 100 options per poll",
+        "Up to 50 tags per poll",
         "Hide/show vote percentage",
         "Private vote with shareable private link",
         "Sensitive content polls",
@@ -41,7 +45,7 @@ export default function Plan() {
   return (
     <Container>
       <header className="text-center mb-12">
-        <h1 className="text-3xl font-bold text-gray-900 mb-4">Choose Your Plan</h1>
+        <h1 className="text-sm sm:text-base font-bold text-gray-900 mb-4">Choose Your Plan</h1>
         <p className="text-gray-600 max-w-2xl mx-auto text-lg">
           Revolutionizing democratic participation through blockchain-powered voting
         </p>
@@ -60,12 +64,12 @@ export default function Plan() {
                   POPULAR
                 </div>
               )}
-              <h2 className="text-2xl font-bold text-gray-800 mb-2">{plan.name}</h2>
+              <h2 className="text-sm sm:text-base font-bold text-gray-800 mb-2">{plan.name}</h2>
               <div className="mb-4">
-                <span className="text-4xl font-bold text-gray-900">{plan.price}</span>
+                <span className="text-md sm:text-md font-bold text-gray-900">{plan.price}</span>
                 {plan.period && <span className="text-gray-500">{plan.period}</span>}
               </div>
-              <p className="text-gray-600 mb-6">{plan.description}</p>
+              <p className="text-gray-600 text-sm mb-6">{plan.description}</p>
 
               <ul className="space-y-3 mb-8">
                 {plan.features.map((feature, i) => (
@@ -73,26 +77,60 @@ export default function Plan() {
                     <svg className="flex-shrink-0 w-5 h-5 text-orange-500 mt-0.5 mr-2" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                     </svg>
-                    <span>{feature}</span>
+                    <span className='text-sm'>{feature}</span>
                   </li>
                 ))}
               </ul>
 
-              {isLoggedIn ? (
-                <button
-                  className={`w-full py-3 px-4 rounded-lg font-medium ${plan.highlight ? 'bg-orange-600 text-white hover:bg-orange-700' : 'bg-gray-100 text-gray-800 hover:bg-gray-200'}`}
-                >
-                  {plan.cta}
-                </button>
-              ) : (
-                <button
-                  onClick={handleLogin}
-                  disabled={loading}
-                  className={`w-full py-3 px-4 rounded-lg font-medium ${plan.highlight ? 'bg-orange-600 text-white hover:bg-orange-700' : 'bg-gray-100 text-gray-800 hover:bg-gray-200'}`}
-                >
-                  {loading ? "Loading..." : plan.cta}
-                </button>
-              )}
+              <div className="flex justify-center">
+                {isLoggedIn ? (
+                  <button
+                    className={`
+                      w-full py-2.5 px-4 rounded-md text-sm font-medium
+                      flex items-baseline justify-center
+                      ${plan.highlight
+                        ? 'bg-orange-600 text-white hover:bg-orange-700'
+                        : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+                      }
+                      transition-colors duration-200
+                    `}
+                  >
+                    {plan.cta}
+                  </button>
+                ) : (
+                  <button
+                    onClick={handleLogin}
+                    disabled={loading}
+                    className={`
+                        w-full py-2.5 px-4 rounded-md text-sm font-medium
+                        flex items-baseline justify-center
+                        ${plan.highlight
+                        ? 'bg-orange-600 text-white hover:bg-orange-700'
+                        : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+                      }
+                        ${loading ? 'opacity-80 cursor-not-allowed' : ''}
+                        transition-colors duration-200
+                      `}
+                  >
+                    {loading ? (
+                      <span className="inline-flex items-baseline gap-2">
+                        <svg
+                          className="animate-spin h-4 w-4"
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Processing
+                      </span>
+                    ) : (
+                      plan.cta
+                    )}
+                  </button>
+                )}
+              </div>
             </div>
           ))}
         </div>
