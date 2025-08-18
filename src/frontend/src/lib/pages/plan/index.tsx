@@ -59,7 +59,7 @@ export default function Plan() {
         `Maximum ${planUsage?.maxOptions || 5} options per poll`,
         `Maximum ${planUsage?.maxTags || 3} tags per poll`,
       ],
-      cta: isLoggedIn ? (currentPlan?.plan === 'free' ? "Current Plan" : "Downgrade") : "Get Started",
+      cta: isLoggedIn ? (currentPlan?.plan === 'free' ? "Current Plan" : "Free") : "Get Started",
       highlight: false,
       action: () => null,
       disabled: isLoggedIn && currentPlan?.plan === 'free'
@@ -108,8 +108,7 @@ export default function Plan() {
         </div>
       )}
 
-      {/* Plan Usage Stats for logged in users */}
-      {isLoggedIn && currentPlan && planUsage && (
+      {/* {isLoggedIn && currentPlan && planUsage && (
         <div className="mb-8 bg-blue-50 p-4 rounded-lg">
           <h3 className="text-sm font-medium text-blue-800 mb-2">Your Current Usage</h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -140,7 +139,7 @@ export default function Plan() {
             </div>
           </div>
         </div>
-      )}
+      )} */}
 
       {/* Pricing Cards Section */}
       <section className="mb-16">
