@@ -12,7 +12,8 @@ type NavLinkItem = {
 const navLinks: NavLinkItem[] = [
   { to: "/", label: "Home" },
   { to: "/about", label: "About" },
-  { to: "/votes/history", label: "History", protected: true }
+  { to: "/votes/history", label: "History", protected: true },
+  { to: "/plan", label: "Plan", protected: true }
 ];
 
 export default function Header() {
