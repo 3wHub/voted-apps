@@ -5,14 +5,28 @@ import Vote from '@/lib/pages/votes';
 import CreateVote from '@/lib/pages/votes/create';
 import About from '@/lib/pages/about';
 import History from '@/lib/pages/votes/history';
+import Plan from '@/lib/pages/plan/index';
 import DetailVote from '@/lib/pages/votes/detail';
 import ProtectedRoute from '@/lib/layout/components/ProtectedRoute';
 import { WalletPage } from './pages/wallet';
 
 export const routes: RouteObject[] = [
-    {
-        path: '/',
-        element: <Layout />,
+  {
+    path: '/',
+    element: <Layout />,
+    children: [
+      { index: true, element: <Home /> },
+      { path: 'about', element: <About /> },
+      {
+        path: 'plan',
+        element: (
+          <ProtectedRoute>
+            <Plan />
+          </ProtectedRoute>
+        )
+      },
+      {
+        path: 'votes',
         children: [
             { index: true, element: <Home /> },
             { path: 'about', element: <About /> },

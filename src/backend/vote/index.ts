@@ -1,6 +1,7 @@
 import { IDL, StableBTreeMap, update, query } from 'azle';
 import { v4 as uuidv4 } from 'uuid';
 import { PollOption, Poll, VoteRecord } from '../types';
+import { plan } from '../plan';
 
 export class Votes {
   private polls = new StableBTreeMap<string, Poll>(0);
@@ -91,12 +92,14 @@ export class Votes {
 
       this.polls.insert(id, poll);
 
+      plan.checkCreatePollLimits(agentId, options, tags);
       const existingPollIds = this.agentPolls.get(agentId) ?? [];
       if (!existingPollIds.includes(id)) {
         existingPollIds.push(id);
       }
       this.agentPolls.insert(agentId, existingPollIds);
 
+      plan.trackPollCreation(agentId, id);
       return poll;
     } catch (error) {
       console.error('Backend poll creation failed:', error);
@@ -252,6 +255,8 @@ export class Votes {
     if (voterPolls.includes(pollId)) {
       throw new Error('You have already voted in this poll');
     }
+
+    plan.trackVote(poll.created_by, agentId);
 
     const optionIndex = poll.options.findIndex((opt) => opt.id === optionId);
     if (optionIndex === -1) return [];
