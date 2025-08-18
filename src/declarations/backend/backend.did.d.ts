@@ -23,6 +23,7 @@ export interface _SERVICE {
       }
     ]
   >,
+  'countMyPolls' : ActorMethod<[string], [] | [number]>,
   'createPoll' : ActorMethod<
     [
       string,

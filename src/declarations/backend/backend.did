@@ -1,5 +1,6 @@
 service: () -> {
     castVote: (text, text, text) -> (opt record {id:text; updated_at:text; question:text; tags:vec text; description:text; end_date:text; created_at:text; created_by:text; start_date:text; total_votes:nat32; options:vec record {id:text; votes:nat32; label:text}});
+    countMyPolls: (text) -> (opt nat32) query;
     createPoll: (text, text, vec record {id:text; votes:nat32; label:text}, vec text, text, text, text) -> (record {id:text; updated_at:text; question:text; tags:vec text; description:text; end_date:text; created_at:text; created_by:text; start_date:text; total_votes:nat32; options:vec record {id:text; votes:nat32; label:text}});
     getAllPolls: () -> (vec record {id:text; updated_at:text; question:text; tags:vec text; description:text; end_date:text; created_at:text; created_by:text; start_date:text; total_votes:nat32; options:vec record {id:text; votes:nat32; label:text}}) query;
     getMyPolls: (text) -> (vec record {id:text; updated_at:text; question:text; tags:vec text; description:text; end_date:text; created_at:text; created_by:text; start_date:text; total_votes:nat32; options:vec record {id:text; votes:nat32; label:text}}) query;

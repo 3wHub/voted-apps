@@ -4,10 +4,11 @@ import Home from '@/lib/pages/home';
 import Vote from '@/lib/pages/votes';
 import CreateVote from '@/lib/pages/votes/create';
 import About from '@/lib/pages/about';
+import Dashboard from '@/lib/pages/dashboard';
 import History from '@/lib/pages/votes/history';
 import DetailVote from '@/lib/pages/votes/detail';
 import ProtectedRoute from '@/lib/layout/components/ProtectedRoute';
-import { WalletPage } from './pages/wallet';
+import Wallet from '@/lib/pages/wallet';
 
 export const routes: RouteObject[] = [
     {
@@ -16,6 +17,13 @@ export const routes: RouteObject[] = [
         children: [
             { index: true, element: <Home /> },
             { path: 'about', element: <About /> },
+            {
+                path: 'dashboard', element: (
+                    <ProtectedRoute>
+                        <Dashboard />
+                    </ProtectedRoute>
+                )
+            },
             {
                 path: 'votes',
                 children: [
@@ -39,7 +47,7 @@ export const routes: RouteObject[] = [
                     }
                 ],
             },
-            { path: 'wallet', element: <WalletPage />}
+            { path: 'wallet', element: <Wallet /> }
         ],
     },
 ];
