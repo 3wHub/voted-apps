@@ -342,9 +342,9 @@ export default function Home() {
                                   text-sm font-medium rounded-lg p-1 border
                                   transition-colors duration-200
                                   ${votedPolls[poll.id]
-                                                              ? "text-gray-700 bg-gray-100 border-gray-300 hover:bg-gray-200"
-                                                              : "text-white bg-orange-500 border-orange-500 hover:bg-orange-600"
-                                                            }
+                                    ? "text-gray-700 bg-gray-100 border-gray-300 hover:bg-gray-200"
+                                    : "text-white bg-orange-500 border-orange-500 hover:bg-orange-600"
+                                  }
                                 `}
                               >
                                 {votedPolls[poll.id] ? 'View Results' : 'Vote Now'}

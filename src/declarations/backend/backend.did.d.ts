@@ -48,6 +48,16 @@ export interface _SERVICE {
       'options' : Array<{ 'id' : string, 'votes' : number, 'label' : string }>,
     }
   >,
+  'getAgentPlanInfo' : ActorMethod<
+    [string],
+    {
+      'voteCount' : number,
+      'plan' : string,
+      'upgradedAt' : [] | [string],
+      'lastVoteReset' : string,
+      'voterCount' : number,
+    }
+  >,
   'getAllPolls' : ActorMethod<
     [],
     Array<
@@ -87,6 +97,19 @@ export interface _SERVICE {
         >,
       }
     >
+  >,
+  'getPlanUsage' : ActorMethod<
+    [string],
+    {
+      'currentPolls' : number,
+      'currentVoters' : number,
+      'maxOptions' : number,
+      'maxPolls' : number,
+      'maxVoters' : number,
+      'maxTags' : number,
+      'maxVotesPerMonth' : number,
+      'currentVotesThisMonth' : number,
+    }
   >,
   'getPoll' : ActorMethod<
     [string],
@@ -168,6 +191,16 @@ export interface _SERVICE {
   'hasVoted' : ActorMethod<[string, string], boolean>,
   'login' : ActorMethod<[], string>,
   'logout' : ActorMethod<[], string>,
+  'upgradeToPremium' : ActorMethod<
+    [string],
+    {
+      'voteCount' : number,
+      'plan' : string,
+      'upgradedAt' : [] | [string],
+      'lastVoteReset' : string,
+      'voterCount' : number,
+    }
+  >,
   'whoAmI' : ActorMethod<[], undefined>,
 }
 export declare const idlFactory: IDL.InterfaceFactory;

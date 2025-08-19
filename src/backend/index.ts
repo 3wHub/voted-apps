@@ -3,6 +3,7 @@ import { PollOption, Poll, VoteRecord } from './types';
 import { PollsIdl, PollOptionIdl, VoteRecordIdl, IDLType } from './types/idl';
 import { votesInstance } from './vote';
 import { authInstance } from './auth';
+import { plan } from './plan';
 
 export default class VotingBackend {
     @query([])
@@ -114,40 +115,108 @@ export default class VotingBackend {
         return votesInstance.getPollOptions(pollId);
     }
 
-    @query([IDL.Text, IDL.Text], IDL.Opt(IDL.Nat32))
-    getVoteCountForOption(pollId: string, optionId: string): [] | [number] {
-        return votesInstance.getVoteCountForOption(pollId, optionId);
-    }
+  @query([IDL.Text, IDL.Text], IDL.Opt(IDL.Nat32))
+  getVoteCountForOption(pollId: string, optionId: string): [] | [number] {
+    return votesInstance.getVoteCountForOption(pollId, optionId);
+  }
+
+  @update([IDL.Text], IDL.Record({
+    plan: IDL.Text,
+    upgradedAt: IDL.Opt(IDL.Text),
+    voteCount: IDL.Nat32,
+    lastVoteReset: IDL.Text,
+    voterCount: IDL.Nat32
+}))
+  upgradeToPremium(agentId: string) {
+    return plan.upgradeToPremium(agentId);
+  }
+
+  @query([IDL.Text], IDL.Record({
+    plan: IDL.Text,
+    upgradedAt: IDL.Opt(IDL.Text),
+    voteCount: IDL.Nat32,
+    lastVoteReset: IDL.Text,
+    voterCount: IDL.Nat32
+  }))
+  getAgentPlanInfo(agentId: string) {
+    return plan.getAgentPlanInfo(agentId);
+  }
+
+  @query([IDL.Text], IDL.Record({
+    maxPolls: IDL.Nat32,
+    maxOptions: IDL.Nat32,
+    maxTags: IDL.Nat32,
+    currentPolls: IDL.Nat32,
+    maxVotesPerMonth: IDL.Nat32,
+    currentVotesThisMonth: IDL.Nat32,
+    maxVoters: IDL.Nat32,
+    currentVoters: IDL.Nat32
+  }))
+  getPlanUsage(agentId: string) {
+    return plan.getPlanUsage(agentId);
+  }
+
 }
 
 export const idlFactory = ({ IDL }: { IDL: IDLType }) => {
-    return IDL.Service({
-        whoAmI: IDL.Func([], [IDL.Text], ['query']),
-        login: IDL.Func([], [IDL.Text], ['update']),
-        logout: IDL.Func([], [IDL.Text], ['update']),
-        createPoll: IDL.Func(
-            [
-                IDL.Text,
-                IDL.Text,
-                IDL.Vec(PollOptionIdl),
-                IDL.Vec(IDL.Text),
-                IDL.Text,
-                IDL.Text,
-                IDL.Text
-            ],
-            [PollsIdl],
-            ['update']
-        ),
-        getAllPolls: IDL.Func([], [IDL.Vec(PollsIdl)], ['query']),
-        getMyPolls: IDL.Func([IDL.Text], [IDL.Vec(PollsIdl)], ['query']),
-        countMyPolls: IDL.Func([IDL.Text], [IDL.Opt(IDL.Nat32)], ['query']),
-        getPoll: IDL.Func([IDL.Text], [IDL.Opt(PollsIdl)], ['query']),
-        getPollsByTag: IDL.Func([IDL.Text], [IDL.Vec(PollsIdl)], ['query']),
-        getPollsByAgent: IDL.Func([IDL.Text], [IDL.Vec(PollsIdl)], ['query']),
-        castVote: IDL.Func([IDL.Text, IDL.Text], [IDL.Opt(PollsIdl)], ['update']),
-        getVotesForPoll: IDL.Func([IDL.Text], [IDL.Vec(VoteRecordIdl)], ['query']),
-        getPollOptions: IDL.Func([IDL.Text], [IDL.Opt(IDL.Vec(PollOptionIdl))], ['query']),
-        getVoteCountForOption: IDL.Func([IDL.Text, IDL.Text], [IDL.Opt(IDL.Nat32)], ['query']),
-        hasVoted: IDL.Func([IDL.Text], [IDL.Bool], ['query']),
-    });
+  return IDL.Service({
+    whoAmI: IDL.Func([], [IDL.Text], ['query']),
+    login: IDL.Func([], [IDL.Text], ['update']),
+    logout: IDL.Func([], [IDL.Text], ['update']),
+    createPoll: IDL.Func(
+      [
+        IDL.Text,
+        IDL.Text,
+        IDL.Vec(PollOptionIdl),
+        IDL.Vec(IDL.Text),
+        IDL.Text,
+        IDL.Text,
+        IDL.Text
+      ],
+      [PollsIdl],
+      ['update']
+    ),
+    getAllPolls: IDL.Func([], [IDL.Vec(PollsIdl)], ['query']),
+    getMyPolls: IDL.Func([IDL.Text], [IDL.Vec(PollsIdl)], ['query']),
+    getPoll: IDL.Func([IDL.Text], [IDL.Opt(PollsIdl)], ['query']),
+    getPollsByTag: IDL.Func([IDL.Text], [IDL.Vec(PollsIdl)], ['query']),
+    getPollsByAgent: IDL.Func([IDL.Text], [IDL.Vec(PollsIdl)], ['query']),
+    castVote: IDL.Func([IDL.Text, IDL.Text], [IDL.Opt(PollsIdl)], ['update']),
+    getVotesForPoll: IDL.Func([IDL.Text], [IDL.Vec(VoteRecordIdl)], ['query']),
+    getPollOptions: IDL.Func([IDL.Text], [IDL.Opt(IDL.Vec(PollOptionIdl))], ['query']),
+    getVoteCountForOption: IDL.Func([IDL.Text, IDL.Text], [IDL.Opt(IDL.Nat32)], ['query']),
+    hasVoted: IDL.Func([IDL.Text], [IDL.Bool], ['query']),
+
+    upgradeToPremium: IDL.Func([IDL.Text], [
+      IDL.Record({
+        plan: IDL.Text,
+        upgradedAt: IDL.Opt(IDL.Text),
+        voteCount: IDL.Nat32,
+        lastVoteReset: IDL.Text,
+        voterCount: IDL.Nat32
+      })
+    ], ['update']),
+    getAgentPlanInfo: IDL.Func([IDL.Text], [
+      IDL.Record({
+        plan: IDL.Text,
+        upgradedAt: IDL.Opt(IDL.Text),
+        voteCount: IDL.Nat32,
+        lastVoteReset: IDL.Text,
+        voterCount: IDL.Nat32
+      })
+    ], ['query']),
+    getPlanUsage: IDL.Func([IDL.Text], [
+      IDL.Record({
+        maxPolls: IDL.Nat32,
+        maxOptions: IDL.Nat32,
+        maxTags: IDL.Nat32,
+        currentPolls: IDL.Nat32,
+        maxVotesPerMonth: IDL.Nat32,
+        currentVotesThisMonth: IDL.Nat32,
+        maxVoters: IDL.Nat32,
+        currentVoters: IDL.Nat32
+      })
+    ], ['query']),
+
+  });
 };

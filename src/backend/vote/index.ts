@@ -1,6 +1,7 @@
 import { IDL, StableBTreeMap, update, query } from 'azle';
 import { v4 as uuidv4 } from 'uuid';
 import { PollOption, Poll, VoteRecord } from '../types';
+import { plan } from '../plan';
 
 export class Votes {
     private polls = new StableBTreeMap<string, Poll>(0);
@@ -91,18 +92,20 @@ export class Votes {
 
             this.polls.insert(id, poll);
 
-            const existingPollIds = this.agentPolls.get(agentId) ?? [];
-            if (!existingPollIds.includes(id)) {
-                existingPollIds.push(id);
-            }
-            this.agentPolls.insert(agentId, existingPollIds);
+      plan.checkCreatePollLimits(agentId, options, tags);
+      const existingPollIds = this.agentPolls.get(agentId) ?? [];
+      if (!existingPollIds.includes(id)) {
+        existingPollIds.push(id);
+      }
+      this.agentPolls.insert(agentId, existingPollIds);
 
-            return poll;
-        } catch (error) {
-            console.error('Backend poll creation failed:', error);
-            throw error;
-        }
+      plan.trackPollCreation(agentId, id);
+      return poll;
+    } catch (error) {
+      console.error('Backend poll creation failed:', error);
+      throw error;
     }
+  }
 
     @query(
         [IDL.Text],
@@ -256,10 +259,12 @@ export class Votes {
             throw new Error('Poll creators cannot vote on their own polls');
         }
 
-        const voterPolls = this.voterRecords.get(voterId) ?? [];
-        if (voterPolls.includes(pollId)) {
-            throw new Error('You have already voted in this poll');
-        }
+    const voterPolls = this.voterRecords.get(voterId) ?? [];
+    if (voterPolls.includes(pollId)) {
+      throw new Error('You have already voted in this poll');
+    }
+
+    plan.trackVote(poll.created_by, agentId);
 
         const optionIndex = poll.options.findIndex((opt) => opt.id === optionId);
         if (optionIndex === -1) return [];

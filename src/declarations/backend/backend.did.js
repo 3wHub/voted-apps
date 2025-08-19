@@ -67,6 +67,19 @@ export const idlFactory = ({ IDL }) => {
         ],
         [],
       ),
+    'getAgentPlanInfo' : IDL.Func(
+        [IDL.Text],
+        [
+          IDL.Record({
+            'voteCount' : IDL.Nat32,
+            'plan' : IDL.Text,
+            'upgradedAt' : IDL.Opt(IDL.Text),
+            'lastVoteReset' : IDL.Text,
+            'voterCount' : IDL.Nat32,
+          }),
+        ],
+        ['query'],
+      ),
     'getAllPolls' : IDL.Func(
         [],
         [
@@ -118,6 +131,22 @@ export const idlFactory = ({ IDL }) => {
               ),
             })
           ),
+        ],
+        ['query'],
+      ),
+    'getPlanUsage' : IDL.Func(
+        [IDL.Text],
+        [
+          IDL.Record({
+            'currentPolls' : IDL.Nat32,
+            'currentVoters' : IDL.Nat32,
+            'maxOptions' : IDL.Nat32,
+            'maxPolls' : IDL.Nat32,
+            'maxVoters' : IDL.Nat32,
+            'maxTags' : IDL.Nat32,
+            'maxVotesPerMonth' : IDL.Nat32,
+            'currentVotesThisMonth' : IDL.Nat32,
+          }),
         ],
         ['query'],
       ),
@@ -240,6 +269,19 @@ export const idlFactory = ({ IDL }) => {
     'hasVoted' : IDL.Func([IDL.Text, IDL.Text], [IDL.Bool], ['query']),
     'login' : IDL.Func([], [IDL.Text], []),
     'logout' : IDL.Func([], [IDL.Text], []),
+    'upgradeToPremium' : IDL.Func(
+        [IDL.Text],
+        [
+          IDL.Record({
+            'voteCount' : IDL.Nat32,
+            'plan' : IDL.Text,
+            'upgradedAt' : IDL.Opt(IDL.Text),
+            'lastVoteReset' : IDL.Text,
+            'voterCount' : IDL.Nat32,
+          }),
+        ],
+        [],
+      ),
     'whoAmI' : IDL.Func([], [], ['query']),
   });
 };
