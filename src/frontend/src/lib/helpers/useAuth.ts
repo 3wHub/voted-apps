@@ -31,7 +31,8 @@ export function useAuth(): AuthHookReturn {
             await login();
             setIsLoggedIn(true);
             setPrincipal(getPrincipal()?.toString() || null);
-            window.location.reload();
+            // Redirect to dashboard after successful login
+            window.location.href = '/dashboard';
         } catch (error) {
             console.error("Login failed:", error);
         } finally {
