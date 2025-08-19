@@ -8,11 +8,14 @@ import { useAuth } from '@/lib/helpers/useAuth';
 import { WalletService } from '@/services/wallet';
 import { DashboardService } from '@/services/dashboard';
 import VotingHistory from '@/lib/layout/components/VotingHistory';
-import { TrendingUp, Users, Vote, Plus } from 'lucide-react';
+import { TrendingUp, Users, Vote, Plus, Crown, Check } from 'lucide-react';
+import UserBadge from '@/lib/layout/components/UserBadge';
+import { useUserSubscription } from '@/lib/hooks/useUserSubscription';
 
 export default function Dashboard() {
     const [loading, setLoading] = useState(true);
     const { principal, isLoggedIn } = useAuth();
+    const { subscription } = useUserSubscription();
     const [myPolls, setMyPolls] = useState([]);
     const [stats, setStats] = useState({ voteCount: 0, createdCount: 0 });
     const [icpBalance, setIcpBalance] = useState<number | null>(null);
@@ -30,13 +33,65 @@ export default function Dashboard() {
         <div className="space-y-6">
             {/* Welcome Header */}
             <div className="bg-gradient-to-r from-orange-50 to-pink-50 rounded-lg p-6">
-                <div>
-                    <h1 className="text-2xl font-bold text-gray-900 mb-2">
-                        Welcome back!
-                    </h1>
-                    <p className="text-gray-600">
-                        Here's what's happening with your voting activities
-                    </p>
+                <div className="flex items-center justify-between">
+                    <div>
+                        <h1 className="text-2xl font-bold text-gray-900 mb-2">
+                            Welcome back!
+                        </h1>
+                        <p className="text-gray-600">
+                            Here's what's happening with your voting activities
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            {/* Subscription Status */}
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-4">
+                        <div className={`p-3 rounded-lg ${subscription.type === 'premium' ? 'bg-yellow-100' : 'bg-gray-100'}`}>
+                            {subscription.type === 'premium' ? (
+                                <Crown className="h-8 w-8 text-yellow-600" />
+                            ) : (
+                                <Users className="h-8 w-8 text-gray-600" />
+                            )}
+                        </div>
+                        <div>
+                            <div className="flex items-center space-x-2">
+                                <h3 className="text-lg font-semibold text-gray-900">
+                                    {subscription.type === 'premium' ? 'Premium Member' : 'Free Member'}
+                                </h3>
+                                <UserBadge type={subscription.type} variant="compact" size="sm" />
+                            </div>
+                            <p className="text-sm text-gray-500">
+                                {subscription.type === 'premium'
+                                    ? 'Enjoy unlimited access to all features'
+                                    : 'Upgrade to unlock premium features'
+                                }
+                            </p>
+                        </div>
+                    </div>
+                    {subscription.type === 'free' && (
+                        <NavLink
+                            to="/plan"
+                            className="bg-gradient-to-r from-orange-500 to-pink-500 text-white px-3 py-1 rounded-lg hover:from-orange-600 hover:to-pink-600 transition-colors duration-200 font-medium text-lg"
+                        >
+                            Upgrade Now
+                        </NavLink>
+                    )}
+                </div>
+
+                {/* Features List */}
+                <div className="mt-6">
+                    <h4 className="text-sm font-medium text-gray-900 mb-3">Your Features:</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                        {subscription.features.map((feature, index) => (
+                            <div key={index} className="flex items-center space-x-2">
+                                <Check className="h-4 w-4 text-green-500 flex-shrink-0" />
+                                <span className="text-sm text-gray-600">{feature}</span>
+                            </div>
+                        ))}
+                    </div>
                 </div>
             </div>
 
