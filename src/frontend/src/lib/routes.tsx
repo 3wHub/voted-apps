@@ -4,11 +4,12 @@ import Home from '@/lib/pages/home';
 import Vote from '@/lib/pages/votes';
 import CreateVote from '@/lib/pages/votes/create';
 import About from '@/lib/pages/about';
+import Dashboard from '@/lib/pages/dashboard';
 import History from '@/lib/pages/votes/history';
 import Plan from '@/lib/pages/plan/index';
 import DetailVote from '@/lib/pages/votes/detail';
 import ProtectedRoute from '@/lib/layout/components/ProtectedRoute';
-import { WalletPage } from './pages/wallet';
+import Wallet from '@/lib/pages/wallet';
 
 export const routes: RouteObject[] = [
     {
@@ -26,51 +27,36 @@ export const routes: RouteObject[] = [
                 )
             },
             {
+                path: 'dashboard', element: (
+                    <ProtectedRoute>
+                        <Dashboard />
+                    </ProtectedRoute>
+                )
+            },
+            {
                 path: 'votes',
                 children: [
-                    { index: true, element: <Home /> },
-                    { path: 'about', element: <About /> },
+                    { index: true, element: <Vote /> },
+                    { path: ':id', element: <DetailVote /> },
                     {
-                        path: 'plan',
+                        path: 'history',
                         element: (
                             <ProtectedRoute>
-                                <Plan />
+                                <History />
                             </ProtectedRoute>
                         )
                     },
                     {
-                        path: 'votes',
-                        children: [
-                            { index: true, element: <Home /> },
-                            { path: 'about', element: <About /> },
-                            {
-                                path: 'votes',
-                                children: [
-                                    { index: true, element: <Vote /> },
-                                    { path: ':id', element: <DetailVote /> },
-                                    {
-                                        path: 'history',
-                                        element: (
-                                            <ProtectedRoute>
-                                                <History />
-                                            </ProtectedRoute>
-                                        )
-                                    },
-                                    {
-                                        path: 'create',
-                                        element: (
-                                            <ProtectedRoute>
-                                                <CreateVote />
-                                            </ProtectedRoute>
-                                        )
-                                    }
-                                ],
-                            },
-                            { path: 'wallet', element: <WalletPage /> }
-                        ],
-                    },
-                ]
-            }
+                        path: 'create',
+                        element: (
+                            <ProtectedRoute>
+                                <CreateVote />
+                            </ProtectedRoute>
+                        )
+                    }
+                ],
+            },
+            { path: 'wallet', element: <Wallet /> }
         ]
     }
 ];

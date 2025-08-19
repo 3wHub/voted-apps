@@ -27,6 +27,7 @@ export const idlFactory = ({ IDL }) => {
         ],
         [],
       ),
+    'countMyPolls' : IDL.Func([IDL.Text], [IDL.Opt(IDL.Nat32)], ['query']),
     'createPoll' : IDL.Func(
         [
           IDL.Text,
