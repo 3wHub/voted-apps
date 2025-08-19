@@ -3,6 +3,8 @@ import { useAuth } from '@/lib/helpers/useAuth';
 import { NavLink } from 'react-router-dom';
 import { Bell, Menu, X } from 'lucide-react';
 import { WalletService } from '@/services/wallet';
+import UserBadge from './UserBadge';
+import { useUserSubscription } from '@/lib/hooks/useUserSubscription';
 
 interface DashboardHeaderProps {
   onToggleSidebar: () => void;
@@ -11,6 +13,7 @@ interface DashboardHeaderProps {
 
 export default function DashboardHeader({ onToggleSidebar, isSidebarOpen }: DashboardHeaderProps) {
   const { isLoggedIn, handleLogout, principal } = useAuth();
+  const { subscription } = useUserSubscription();
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [icpBalance, setIcpBalance] = useState<number | null>(null);
   const [balanceLoading, setBalanceLoading] = useState(false);
@@ -98,7 +101,9 @@ export default function DashboardHeader({ onToggleSidebar, isSidebarOpen }: Dash
                     <p className="text-sm font-medium text-gray-900">
                       {principal?.toString().slice(0, 8) || 'User'}...
                     </p>
-                    <p className="text-xs text-gray-500">Member</p>
+                    <div className="flex items-center space-x-1 mt-1">
+                      <UserBadge type={subscription.type} variant="compact" size="sm" />
+                    </div>
                   </div>
                 </div>
               </button>
@@ -111,7 +116,10 @@ export default function DashboardHeader({ onToggleSidebar, isSidebarOpen }: Dash
                       <p className="text-sm font-medium text-gray-900">
                         {principal?.toString().slice(0, 12) || 'User'}...
                       </p>
-                      <p className="text-xs text-gray-500 mt-1">Member</p>
+                      <div className="flex items-center justify-between mt-2">
+                        <p className="text-xs text-gray-500">{subscription.type === 'premium' ? 'Premium Member' : 'Free Member'}</p>
+                        <UserBadge type={subscription.type} variant="compact" size="sm" />
+                      </div>
                     </div>
 
                     <div className="border-t border-gray-100">
