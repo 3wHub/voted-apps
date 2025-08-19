@@ -322,6 +322,33 @@ export class Votes {
 
     @query(
         [IDL.Text],
+        IDL.Vec(
+            IDL.Record({
+                id: IDL.Text,
+                question: IDL.Text,
+                description: IDL.Text,
+                options: IDL.Vec(IDL.Record({ id: IDL.Text, label: IDL.Text, votes: IDL.Nat32 })),
+                tags: IDL.Vec(IDL.Text),
+                total_votes: IDL.Nat32,
+                created_at: IDL.Text,
+                start_date: IDL.Text,
+                end_date: IDL.Text,
+                updated_at: IDL.Text,
+                created_by: IDL.Text,
+            }),
+        ),
+    )
+    getVotedPolls(agentId: string): Poll[] {
+        const voterPolls = this.voterRecords.get(agentId);
+        if (!voterPolls) return [];
+
+        return voterPolls
+            .map((pollId) => this.polls.get(pollId))
+            .filter((poll) => poll !== undefined) as Poll[];
+    }
+
+    @query(
+        [IDL.Text],
         IDL.Opt(
             IDL.Vec(
                 IDL.Record({

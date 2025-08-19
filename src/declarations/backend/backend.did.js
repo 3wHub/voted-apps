@@ -251,6 +251,33 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Opt(IDL.Nat32)],
         ['query'],
       ),
+    'getVotedPolls' : IDL.Func(
+        [IDL.Text],
+        [
+          IDL.Vec(
+            IDL.Record({
+              'id' : IDL.Text,
+              'updated_at' : IDL.Text,
+              'question' : IDL.Text,
+              'tags' : IDL.Vec(IDL.Text),
+              'description' : IDL.Text,
+              'end_date' : IDL.Text,
+              'created_at' : IDL.Text,
+              'created_by' : IDL.Text,
+              'start_date' : IDL.Text,
+              'total_votes' : IDL.Nat32,
+              'options' : IDL.Vec(
+                IDL.Record({
+                  'id' : IDL.Text,
+                  'votes' : IDL.Nat32,
+                  'label' : IDL.Text,
+                })
+              ),
+            })
+          ),
+        ],
+        ['query'],
+      ),
     'getVotesForPoll' : IDL.Func(
         [IDL.Text],
         [
