@@ -1,51 +1,57 @@
 import { useState, useEffect } from 'react';
-import { initAuthClient, login, logout, isAuthenticated } from '@/services/auth';
+import { initAuthClient, login, logout, isAuthenticated, getPrincipal } from '@/services/auth';
 
 type AuthHookReturn = {
-  isLoggedIn: boolean;
-  loading: boolean;
-  handleLogin: () => Promise<void>;
-  handleLogout: () => Promise<void>;
+    isLoggedIn: boolean;
+    loading: boolean;
+    principal: string | null;
+    handleLogin: () => Promise<void>;
+    handleLogout: () => Promise<void>;
 };
 
 export function useAuth(): AuthHookReturn {
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
-  const [loading, setLoading] = useState<boolean>(true);
+    const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
+    const [loading, setLoading] = useState<boolean>(true);
+    const [principal, setPrincipal] = useState<string | null>(null);
 
-  useEffect(() => {
-    async function checkAuth() {
-      await initAuthClient();
-      setIsLoggedIn(await isAuthenticated());
-      setLoading(false);
-    }
-    checkAuth();
-  }, []);
+    useEffect(() => {
+        async function checkAuth() {
+            await initAuthClient();
+            const authenticated = await isAuthenticated();
+            setIsLoggedIn(authenticated);
+            setPrincipal(authenticated ? getPrincipal()?.toString() || null : null);
+            setLoading(false);
+        }
+        checkAuth();
+    }, []);
 
-  const handleLogin = async (): Promise<void> => {
-    setLoading(true);
-    try {
-      await login();
-      setIsLoggedIn(true);
-      window.location.reload();
-    } catch (error) {
-      console.error("Login failed:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+    const handleLogin = async (): Promise<void> => {
+        setLoading(true);
+        try {
+            await login();
+            setIsLoggedIn(true);
+            setPrincipal(getPrincipal()?.toString() || null);
+            window.location.reload();
+        } catch (error) {
+            console.error("Login failed:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
 
-  const handleLogout = async (): Promise<void> => {
-    setLoading(true);
-    try {
-      await logout();
-      setIsLoggedIn(false);
-      window.location.reload();
-    } catch (error) {
-      console.error("Logout failed:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+    const handleLogout = async (): Promise<void> => {
+        setLoading(true);
+        try {
+            await logout();
+            setIsLoggedIn(false);
+            setPrincipal(null);
+            window.location.reload();
+        } catch (error) {
+            console.error("Logout failed:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
 
-  return { isLoggedIn, loading, handleLogin, handleLogout };
+    return { isLoggedIn, loading, principal, handleLogin, handleLogout };
 }

@@ -29,8 +29,25 @@
         }
       },
       "frontend": {}
+    },
+    "icp_ledger_canister": {
+      "type": "custom",
+      "candid": "https://github.com/dfinity/ic/releases/download/ledger-suite-icp-2025-07-04/ledger.did",
+      "wasm": "https://github.com/dfinity/ic/releases/download/ledger-suite-icp-2025-07-04/ledger-canister_notify-method.wasm.gz",
+      "remote": {
+        "id": {
+          "ic": "ryjl3-tyaaa-aaaaa-aaaba-cai"
+        }
+      },
+      "init_arg": "(variant { Init = record { minting_account = \"52daed77f9e47d8ce570a22f3e0c7528f954c99eaec93c404a54a1049864f0fa\"; initial_values = vec { record { \"19897c2c30b3a1a8c9955607d2fce610ab200695cf2a3ac741077127891acdda\"; record { e8s = 10_000_000_000 : nat64; }; }; }; send_whitelist = vec {}; transfer_fee = opt record { e8s = 10_000 : nat64; }; token_symbol = opt \"VDICP\"; token_name = opt \"VoteD ICP\"; } })"
     }
   },
-  "output_env_file": ".env"
+  "defaults": {
+    "build": {
+      "args": "",
+      "packtool": ""
+    }
+  },
+  "output_env_file": ".env",
+  "version": 1
 }
-

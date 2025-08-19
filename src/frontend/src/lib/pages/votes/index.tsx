@@ -31,13 +31,10 @@ export default function Vote() {
         const fetchPoll = async () => {
             try {
                 const data = await getPoll(id);
-                console.log('Poll data:', data);
                 setPoll(data);
             } catch (err) {
-                console.log('Poll data:', err);
                 console.error('Failed to fetch poll:', err);
             } finally {
-                console.log('Poll final');
                 setLoading(false);
             }
         };
