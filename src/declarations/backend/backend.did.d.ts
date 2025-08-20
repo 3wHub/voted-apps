@@ -23,6 +23,7 @@ export interface _SERVICE {
       }
     ]
   >,
+  'cleanupAgentData' : ActorMethod<[string], boolean>,
   'countMyPolls' : ActorMethod<[string], [] | [number]>,
   'createPoll' : ActorMethod<
     [
