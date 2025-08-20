@@ -1,21 +1,28 @@
 service: () -> {
     castVote: (text, text, text) -> (opt record {id:text; updated_at:text; question:text; tags:vec text; description:text; end_date:text; created_at:text; created_by:text; start_date:text; total_votes:nat32; options:vec record {id:text; votes:nat32; label:text}});
+    cleanupAgentData: (text) -> (bool);
     countMyPolls: (text) -> (opt nat32) query;
     createPoll: (text, text, vec record {id:text; votes:nat32; label:text}, vec text, text, text, text) -> (record {id:text; updated_at:text; question:text; tags:vec text; description:text; end_date:text; created_at:text; created_by:text; start_date:text; total_votes:nat32; options:vec record {id:text; votes:nat32; label:text}});
     getAgentPlanInfo: (text) -> (record {voteCount:nat32; plan:text; upgradedAt:opt text; lastVoteReset:text; voterCount:nat32}) query;
     getAllPolls: () -> (vec record {id:text; updated_at:text; question:text; tags:vec text; description:text; end_date:text; created_at:text; created_by:text; start_date:text; total_votes:nat32; options:vec record {id:text; votes:nat32; label:text}}) query;
     getMyPolls: (text) -> (vec record {id:text; updated_at:text; question:text; tags:vec text; description:text; end_date:text; created_at:text; created_by:text; start_date:text; total_votes:nat32; options:vec record {id:text; votes:nat32; label:text}}) query;
+    getPaymentHistory: (text) -> (vec record {id:text; status:text; completedAt:opt text; createdAt:text; agentId:text; amount:nat64; planType:text; transactionId:nat64}) query;
     getPlanUsage: (text) -> (record {currentPolls:nat32; currentVoters:nat32; maxOptions:nat32; maxPolls:nat32; maxVoters:nat32; maxTags:nat32; maxVotesPerMonth:nat32; currentVotesThisMonth:nat32}) query;
     getPoll: (text) -> (opt record {id:text; updated_at:text; question:text; tags:vec text; description:text; end_date:text; created_at:text; created_by:text; start_date:text; total_votes:nat32; options:vec record {id:text; votes:nat32; label:text}}) query;
     getPollOptions: (text) -> (opt vec record {id:text; votes:nat32; label:text}) query;
     getPollsByAgent: (text) -> (vec record {id:text; updated_at:text; question:text; tags:vec text; description:text; end_date:text; created_at:text; created_by:text; start_date:text; total_votes:nat32; options:vec record {id:text; votes:nat32; label:text}}) query;
     getPollsByTag: (text) -> (vec record {id:text; updated_at:text; question:text; tags:vec text; description:text; end_date:text; created_at:text; created_by:text; start_date:text; total_votes:nat32; options:vec record {id:text; votes:nat32; label:text}}) query;
+    getPremiumPlanPrice: () -> (nat64) query;
     getVoteCountForOption: (text, text) -> (opt nat32) query;
     getVotedPolls: (text) -> (vec record {id:text; updated_at:text; question:text; tags:vec text; description:text; end_date:text; created_at:text; created_by:text; start_date:text; total_votes:nat32; options:vec record {id:text; votes:nat32; label:text}}) query;
     getVotesForPoll: (text) -> (vec record {id:text; optionId:text; votedAt:text; voterId:text; pollId:text}) query;
+    getWalletBalance: (text) -> (opt record {balance:nat64; lastUpdated:text; agentId:text}) query;
+    hasSufficientBalance: (nat64) -> (bool) query;
     hasVoted: (text, text) -> (bool) query;
     login: () -> (text);
     logout: () -> (text);
+    updateWalletBalance: (text, nat64) -> (record {balance:nat64; lastUpdated:text; agentId:text});
     upgradeToPremium: (text) -> (record {voteCount:nat32; plan:text; upgradedAt:opt text; lastVoteReset:text; voterCount:nat32});
+    upgradeToPremiumWithPayment: (text, nat64) -> (record {voteCount:nat32; plan:text; upgradedAt:opt text; paymentId:text; lastVoteReset:text; voterCount:nat32});
     whoAmI: () -> () query;
 }

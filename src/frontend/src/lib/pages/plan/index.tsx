@@ -2,7 +2,8 @@ import { Link } from 'react-router-dom';
 import Container from '@/lib/pages/components/Container';
 import { useAuth } from '@/lib/helpers/useAuth';
 import { useEffect, useState } from 'react';
-import { getMyPlanInfo, getMyPlanUsage, upgradeToPremium, AgentPlan, PlanUsage } from '@/services/plan';
+import { getMyPlanInfo, getMyPlanUsage, upgradeToPremium, AgentPlan, PlanUsage, UpgradeWithPaymentResult } from '@/services/plan';
+import WalletUpgrade from './WalletUpgrade';
 
 export default function Plan() {
   const { isLoggedIn, loading, handleLogin } = useAuth();
@@ -10,6 +11,8 @@ export default function Plan() {
   const [planUsage, setPlanUsage] = useState<PlanUsage | null>(null);
   const [isUpgrading, setIsUpgrading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showWalletUpgrade, setShowWalletUpgrade] = useState(false);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   useEffect(() => {
     if (isLoggedIn) {
@@ -34,17 +37,27 @@ export default function Plan() {
   };
 
   const handleUpgrade = async () => {
-    setIsUpgrading(true);
-    setError(null);
-    try {
-      const upgradedPlan = await upgradeToPremium();
-      setCurrentPlan(upgradedPlan);
+    setShowWalletUpgrade(true);
+  };
+
+  const handleWalletUpgradeSuccess = async (result: UpgradeWithPaymentResult) => {
+    setError(null); // Clear any previous errors
+    setSuccessMessage(`Successfully upgraded to Premium! Payment ID: ${result.paymentId}`);
+    setCurrentPlan(result);
+    setShowWalletUpgrade(false);
+    
+    // Add a small delay to ensure backend state is updated
+    setTimeout(async () => {
       await fetchPlanData();
-    } catch (err) {
-      setError('Failed to upgrade plan. Please try again.');
-    } finally {
-      setIsUpgrading(false);
-    }
+    }, 1000);
+  };
+
+  const handleWalletUpgradeError = (errorMessage: string) => {
+    setError(errorMessage);
+  };
+
+  const handleCloseWalletUpgrade = () => {
+    setShowWalletUpgrade(false);
   };
 
   const plans = [
@@ -105,6 +118,12 @@ export default function Plan() {
       {error && (
         <div className="mb-6 p-4 bg-red-50 text-red-700 rounded-md text-center">
           {error}
+        </div>
+      )}
+
+      {successMessage && (
+        <div className="mb-6 p-4 bg-green-50 text-green-700 rounded-md text-center">
+          {successMessage}
         </div>
       )}
 
@@ -259,6 +278,41 @@ export default function Plan() {
           ))}
         </div>
       </section>
+
+      {/* Wallet Upgrade Modal */}
+      {showWalletUpgrade && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Upgrade to Premium with ICP
+                </h3>
+                <button
+                  onClick={handleCloseWalletUpgrade}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              
+              <div className="mb-4">
+                <p className="text-sm text-gray-600">
+                  Pay with your ICP wallet balance to upgrade to Premium and unlock all features.
+                </p>
+              </div>
+
+              <WalletUpgrade
+                onUpgradeSuccess={handleWalletUpgradeSuccess}
+                onError={handleWalletUpgradeError}
+                disabled={false}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </Container>
   );
 }

@@ -27,6 +27,7 @@ export const idlFactory = ({ IDL }) => {
         ],
         [],
       ),
+    'cleanupAgentData' : IDL.Func([IDL.Text], [IDL.Bool], []),
     'countMyPolls' : IDL.Func([IDL.Text], [IDL.Opt(IDL.Nat32)], ['query']),
     'createPoll' : IDL.Func(
         [
@@ -129,6 +130,24 @@ export const idlFactory = ({ IDL }) => {
                   'label' : IDL.Text,
                 })
               ),
+            })
+          ),
+        ],
+        ['query'],
+      ),
+    'getPaymentHistory' : IDL.Func(
+        [IDL.Text],
+        [
+          IDL.Vec(
+            IDL.Record({
+              'id' : IDL.Text,
+              'status' : IDL.Text,
+              'completedAt' : IDL.Opt(IDL.Text),
+              'createdAt' : IDL.Text,
+              'agentId' : IDL.Text,
+              'amount' : IDL.Nat64,
+              'planType' : IDL.Text,
+              'transactionId' : IDL.Nat64,
             })
           ),
         ],
@@ -246,6 +265,7 @@ export const idlFactory = ({ IDL }) => {
         ],
         ['query'],
       ),
+    'getPremiumPlanPrice' : IDL.Func([], [IDL.Nat64], ['query']),
     'getVoteCountForOption' : IDL.Func(
         [IDL.Text, IDL.Text],
         [IDL.Opt(IDL.Nat32)],
@@ -293,9 +313,34 @@ export const idlFactory = ({ IDL }) => {
         ],
         ['query'],
       ),
+    'getWalletBalance' : IDL.Func(
+        [IDL.Text],
+        [
+          IDL.Opt(
+            IDL.Record({
+              'balance' : IDL.Nat64,
+              'lastUpdated' : IDL.Text,
+              'agentId' : IDL.Text,
+            })
+          ),
+        ],
+        ['query'],
+      ),
+    'hasSufficientBalance' : IDL.Func([IDL.Nat64], [IDL.Bool], ['query']),
     'hasVoted' : IDL.Func([IDL.Text, IDL.Text], [IDL.Bool], ['query']),
     'login' : IDL.Func([], [IDL.Text], []),
     'logout' : IDL.Func([], [IDL.Text], []),
+    'updateWalletBalance' : IDL.Func(
+        [IDL.Text, IDL.Nat64],
+        [
+          IDL.Record({
+            'balance' : IDL.Nat64,
+            'lastUpdated' : IDL.Text,
+            'agentId' : IDL.Text,
+          }),
+        ],
+        [],
+      ),
     'upgradeToPremium' : IDL.Func(
         [IDL.Text],
         [
@@ -303,6 +348,20 @@ export const idlFactory = ({ IDL }) => {
             'voteCount' : IDL.Nat32,
             'plan' : IDL.Text,
             'upgradedAt' : IDL.Opt(IDL.Text),
+            'lastVoteReset' : IDL.Text,
+            'voterCount' : IDL.Nat32,
+          }),
+        ],
+        [],
+      ),
+    'upgradeToPremiumWithPayment' : IDL.Func(
+        [IDL.Text, IDL.Nat64],
+        [
+          IDL.Record({
+            'voteCount' : IDL.Nat32,
+            'plan' : IDL.Text,
+            'upgradedAt' : IDL.Opt(IDL.Text),
+            'paymentId' : IDL.Text,
             'lastVoteReset' : IDL.Text,
             'voterCount' : IDL.Nat32,
           }),

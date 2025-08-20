@@ -1,5 +1,6 @@
 import { createActor, canisterId } from '../../../declarations/backend';
 import { whoAmI } from './auth';
+import { createRobustActor, retryActorCall } from './actor';
 
 const backend = createActor(canisterId);
 
@@ -126,27 +127,26 @@ export const getVotedPolls = async (): Promise<Poll[]> => {
 };
 
 export const countPollsByAgent = async (): Promise<number> => {
-    // try {
-    //     const agentId = (await whoAmI()).toString();
-    //     const result = await backend.countMyPolls(agentId) as Poll[];
-    //     return result;
-    // } catch (error) {
-    //     return 0;
-    // }
-
     try {
         const agentId = (await whoAmI()).toString();
+        if (!agentId) return 0;
 
-        const response = await backend.countMyPolls(agentId);
-        const result = response as BackendOptionalResponse<number>;
+        return await retryActorCall(async () => {
+            const robustBackend = await createRobustActor();
+            const response = await robustBackend.countMyPolls(agentId);
+            const result = response as BackendOptionalResponse<number>;
 
-        if (!result) return 0;
-        if (result.length === 0) return 0;
+            if (!result) return 0;
+            if (Array.isArray(result) && result.length === 0) return 0;
+            if (Array.isArray(result) && result.length > 0) {
+                const count = result[0];
+                return typeof count === 'number' ? count : 0;
+            }
 
-        const count = result[0];
-        return typeof count === 'number' ? count : 0;
+            return 0;
+        });
     } catch (error) {
-        console.error('Error fetching vote count:', error);
+        console.error('Error fetching poll count:', error);
         return 0;
     }
 }

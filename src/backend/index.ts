@@ -4,6 +4,7 @@ import { PollsIdl, PollOptionIdl, VoteRecordIdl, IDLType } from './types/idl';
 import { votesInstance } from './vote';
 import { authInstance } from './auth';
 import { plan } from './plan';
+import { coinService } from './coin';
 
 export default class VotingBackend {
     @query([])
@@ -161,6 +162,66 @@ export default class VotingBackend {
     return plan.getPlanUsage(agentId);
   }
 
+  // Coin/Wallet Integration Methods
+  @query([], IDL.Nat64)
+  getPremiumPlanPrice() {
+    return coinService.getPremiumPlanPrice();
+  }
+
+  @update([IDL.Text, IDL.Nat64], IDL.Record({
+    plan: IDL.Text,
+    upgradedAt: IDL.Opt(IDL.Text),
+    voteCount: IDL.Nat32,
+    lastVoteReset: IDL.Text,
+    voterCount: IDL.Nat32,
+    paymentId: IDL.Text,
+  }))
+  upgradeToPremiumWithPayment(agentId: string, transactionId: bigint) {
+    return plan.upgradeToPremiumWithPayment(agentId, transactionId);
+  }
+
+  @query([IDL.Text], IDL.Vec(IDL.Record({
+    id: IDL.Text,
+    agentId: IDL.Text,
+    amount: IDL.Nat64,
+    transactionId: IDL.Nat64,
+    planType: IDL.Text,
+    status: IDL.Text,
+    createdAt: IDL.Text,
+    completedAt: IDL.Opt(IDL.Text)
+  })))
+  getPaymentHistory(agentId: string) {
+    return coinService.getPaymentHistory(agentId);
+  }
+
+  @query([IDL.Text], IDL.Opt(IDL.Record({
+    agentId: IDL.Text,
+    balance: IDL.Nat64,
+    lastUpdated: IDL.Text
+  })))
+  getWalletBalance(agentId: string) {
+    return coinService.getWalletBalance(agentId);
+  }
+
+  @update([IDL.Text, IDL.Nat64], IDL.Record({
+    agentId: IDL.Text,
+    balance: IDL.Nat64,
+    lastUpdated: IDL.Text
+  }))
+  updateWalletBalance(agentId: string, balance: bigint) {
+    return coinService.updateWalletBalance(agentId, balance);
+  }
+
+  @query([IDL.Nat64], IDL.Bool)
+  hasSufficientBalance(balance: bigint) {
+    return coinService.hasSufficientBalance(balance);
+  }
+
+  @update([IDL.Text], IDL.Bool)
+  cleanupAgentData(agentId: string) {
+    return votesInstance.cleanupAgentData(agentId);
+  }
+
 }
 
 export const idlFactory = ({ IDL }: { IDL: IDLType }) => {
@@ -224,6 +285,41 @@ export const idlFactory = ({ IDL }: { IDL: IDLType }) => {
         currentVoters: IDL.Nat32
       })
     ], ['query']),
+
+    // Coin/Wallet Integration Methods
+    getPremiumPlanPrice: IDL.Func([], [IDL.Nat64], ['query']),
+    upgradeToPremiumWithPayment: IDL.Func([IDL.Text, IDL.Nat64], [
+      IDL.Record({
+        plan: IDL.Text,
+        upgradedAt: IDL.Opt(IDL.Text),
+        voteCount: IDL.Nat32,
+        lastVoteReset: IDL.Text,
+        voterCount: IDL.Nat32,
+        paymentId: IDL.Text,
+      })
+    ], ['update']),
+    getPaymentHistory: IDL.Func([IDL.Text], [IDL.Vec(IDL.Record({
+      id: IDL.Text,
+      agentId: IDL.Text,
+      amount: IDL.Nat64,
+      transactionId: IDL.Nat64,
+      planType: IDL.Text,
+      status: IDL.Text,
+      createdAt: IDL.Text,
+      completedAt: IDL.Opt(IDL.Text)
+    }))], ['query']),
+    getWalletBalance: IDL.Func([IDL.Text], [IDL.Opt(IDL.Record({
+      agentId: IDL.Text,
+      balance: IDL.Nat64,
+      lastUpdated: IDL.Text
+    }))], ['query']),
+    updateWalletBalance: IDL.Func([IDL.Text, IDL.Nat64], [IDL.Record({
+      agentId: IDL.Text,
+      balance: IDL.Nat64,
+      lastUpdated: IDL.Text
+    })], ['update']),
+    hasSufficientBalance: IDL.Func([IDL.Nat64], [IDL.Bool], ['query']),
+    cleanupAgentData: IDL.Func([IDL.Text], [IDL.Bool], ['update']),
 
   });
 };

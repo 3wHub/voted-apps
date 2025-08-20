@@ -1,5 +1,6 @@
 import { RouteObject } from 'react-router-dom';
 import Layout from '@/lib/layout';
+import DashboardLayout from '@/lib/layout/DashboardLayout';
 import Home from '@/lib/pages/home';
 import Vote from '@/lib/pages/votes';
 import CreateVote from '@/lib/pages/votes/create';
@@ -18,45 +19,23 @@ export const routes: RouteObject[] = [
         children: [
             { index: true, element: <Home /> },
             { path: 'about', element: <About /> },
-            {
-                path: 'plan',
-                element: (
-                    <ProtectedRoute>
-                        <Plan />
-                    </ProtectedRoute>
-                )
-            },
-            {
-                path: 'dashboard', element: (
-                    <ProtectedRoute>
-                        <Dashboard />
-                    </ProtectedRoute>
-                )
-            },
-            {
-                path: 'votes',
-                children: [
-                    { index: true, element: <Vote /> },
-                    { path: ':id', element: <DetailVote /> },
-                    {
-                        path: 'history',
-                        element: (
-                            <ProtectedRoute>
-                                <History />
-                            </ProtectedRoute>
-                        )
-                    },
-                    {
-                        path: 'create',
-                        element: (
-                            <ProtectedRoute>
-                                <CreateVote />
-                            </ProtectedRoute>
-                        )
-                    }
-                ],
-            },
-            { path: 'wallet', element: <Wallet /> }
+            { path: 'votes', element: <Vote /> },
+            { path: 'votes/:id', element: <DetailVote /> },
+        ]
+    },
+    {
+        path: '/',
+        element: (
+            <ProtectedRoute>
+                <DashboardLayout />
+            </ProtectedRoute>
+        ),
+        children: [
+            { path: 'dashboard', element: <Dashboard /> },
+            { path: 'plan', element: <Plan /> },
+            { path: 'wallet', element: <Wallet /> },
+            { path: 'votes/create', element: <CreateVote /> },
+            { path: 'votes/history', element: <History /> },
         ]
     }
 ];
