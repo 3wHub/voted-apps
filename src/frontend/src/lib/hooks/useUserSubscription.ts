@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/helpers/useAuth';
+import { getMyPlanInfo, getMyPlanUsage, AgentPlan, PlanUsage } from '@/services/plan';
 
 export type SubscriptionType = 'free' | 'premium';
 
@@ -8,6 +9,8 @@ interface UserSubscription {
   isActive: boolean;
   expirationDate?: Date;
   features: string[];
+  planInfo?: AgentPlan;
+  planUsage?: PlanUsage;
 }
 
 interface UseUserSubscriptionReturn {
@@ -17,45 +20,29 @@ interface UseUserSubscriptionReturn {
   refreshSubscription: () => Promise<void>;
 }
 
-// Mock subscription data - replace with actual API calls
-const mockSubscriptions: Record<string, UserSubscription> = {
-  // Default free subscription for any user
-  default: {
-    type: 'free',
-    isActive: true,
-    features: [
-      'Basic voting',
-      'View public polls',
-      'Create up to 3 polls per month',
-      'Standard support'
-    ]
-  },
-  // Premium subscription example
-  premium_user: {
-    type: 'premium',
-    isActive: true,
-    expirationDate: new Date('2024-12-31'),
-    features: [
-      'Unlimited voting',
-      'Create unlimited polls',
-      'Advanced analytics',
-      'Priority support',
-      'Custom themes',
-      'Export data',
-      'Private polls'
-    ]
-  }
+// Default free subscription
+const defaultSubscription: UserSubscription = {
+  type: 'free',
+  isActive: true,
+  features: [
+    'Basic voting',
+    'View public polls',
+    'Create up to 5 polls per month',
+    'Maximum 100 voters per poll',
+    'Maximum 5 options per poll',
+    'Standard support'
+  ]
 };
 
 export const useUserSubscription = (): UseUserSubscriptionReturn => {
   const { principal, isLoggedIn } = useAuth();
-  const [subscription, setSubscription] = useState<UserSubscription>(mockSubscriptions.default);
+  const [subscription, setSubscription] = useState<UserSubscription>(defaultSubscription);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const fetchSubscription = async () => {
     if (!principal || !isLoggedIn) {
-      setSubscription(mockSubscriptions.default);
+      setSubscription(defaultSubscription);
       return;
     }
 
@@ -63,22 +50,44 @@ export const useUserSubscription = (): UseUserSubscriptionReturn => {
     setError(null);
 
     try {
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 500));
+      const [planInfo, planUsage] = await Promise.all([
+        getMyPlanInfo(),
+        getMyPlanUsage()
+      ]);
 
-      // Mock logic: check if user has premium subscription
-      // In real implementation, this would be an API call
-      const userKey = principal.slice(0, 10); // Use part of principal as key
-      const isPremiumUser = userKey.includes('premium') || Math.random() > 0.7; // 30% chance for demo
+      const features = planInfo.plan === 'premium' ? [
+        'Unlimited voting',
+        'Create unlimited polls',
+        'Unlimited voters per poll',
+        'Unlimited options per poll',
+        'Advanced analytics',
+        'Priority support',
+        'Premium badge',
+        'Integration with ICP coin',
+        'Export data',
+        'Private polls'
+      ] : [
+        'Basic voting',
+        'View public polls',
+        `Create up to ${planUsage.maxPolls} polls per month`,
+        `Maximum ${planUsage.maxVoters} voters per poll`,
+        `Maximum ${planUsage.maxOptions} options per poll`,
+        `Maximum ${planUsage.maxTags} tags per poll`,
+        'Standard support'
+      ];
 
-      if (isPremiumUser) {
-        setSubscription(mockSubscriptions.premium_user);
-      } else {
-        setSubscription(mockSubscriptions.default);
-      }
+      setSubscription({
+        type: planInfo.plan,
+        isActive: true,
+        expirationDate: planInfo.upgradedAt ? undefined : undefined, // Premium doesn't expire in this implementation
+        features,
+        planInfo,
+        planUsage
+      });
     } catch (err) {
+      console.error('Failed to fetch subscription data:', err);
       setError('Failed to fetch subscription data');
-      setSubscription(mockSubscriptions.default);
+      setSubscription(defaultSubscription);
     } finally {
       setIsLoading(false);
     }
