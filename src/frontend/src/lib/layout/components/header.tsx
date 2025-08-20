@@ -13,7 +13,6 @@ const navLinks: NavLinkItem[] = [
     { to: "/", label: "Home" },
     { to: "/about", label: "About" },
     { to: "/votes", label: "Votes" },
-    { to: "/dashboard", label: "Dashboard", protected: true },
 ];
 
 export default function Header() {
