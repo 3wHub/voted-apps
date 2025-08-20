@@ -96,18 +96,11 @@ export class Votes {
             this.polls.insert(id, poll);
 
             // Update agent's poll list
-            console.log('agentId', agentId);
-            console.log('id', id);
             const existingPollIds = this.agentPolls.get(agentId) ?? [];
-            console.log('existingPollIds', existingPollIds);
 
-            console.log('!existingPollIds.includes(id)', !existingPollIds.includes(id));
             if (!existingPollIds.includes(id)) {
-                console.log('here');
                 existingPollIds.push(id);
-                console.log('after push', existingPollIds);
                 this.agentPolls.insert(agentId, existingPollIds);
-                console.log('after insert', this.agentPolls);
             }
 
             // Track the creation
