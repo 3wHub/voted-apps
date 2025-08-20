@@ -147,16 +147,20 @@ export default function DashboardSidebar({ isOpen, onClose, isCollapsed, onToggl
                         showFullContent ? 'px-4' : 'px-2'
                     )}>
                         {showFullContent && (
-                            <div className="flex items-center">
-                                <img src="/voted.png" className="h-8 w-8 object-contain flex-shrink-0" alt="VoteD Logo" />
-                                <span className="ml-2 text-lg font-semibold text-gray-900 lg:block hidden">VoteD</span>
-                            </div>
+                            <NavLink to={'/'}>
+                                <div className="flex items-center">
+                                    <img src="/voted.png" className="h-8 w-8 object-contain flex-shrink-0" alt="VoteD Logo" />
+                                    <span className="ml-2 text-lg font-semibold text-gray-900 lg:block hidden">VoteD</span>
+                                </div>
+                            </NavLink>
                         )}
 
                         {!showFullContent && (
-                            <div className="flex justify-center w-full">
-                                <img src="/voted.png" className="h-8 w-8 object-contain flex-shrink-0" alt="VoteD Logo" />
-                            </div>
+                            <NavLink to={'/'}>
+                                <div className="flex justify-center w-full">
+                                    <img src="/voted.png" className="h-8 w-8 object-contain flex-shrink-0" alt="VoteD Logo" />
+                                </div>
+                            </NavLink>
                         )}
 
                         {/* Toggle button - always visible on desktop */}

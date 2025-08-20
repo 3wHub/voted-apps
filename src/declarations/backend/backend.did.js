@@ -27,6 +27,7 @@ export const idlFactory = ({ IDL }) => {
         ],
         [],
       ),
+    'cleanupAgentData' : IDL.Func([IDL.Text], [IDL.Bool], []),
     'countMyPolls' : IDL.Func([IDL.Text], [IDL.Opt(IDL.Nat32)], ['query']),
     'createPoll' : IDL.Func(
         [
