@@ -1,14 +1,20 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import FormInput from '@/lib/pages/components/FormInput';
+import { Card, Button } from 'flowbite-react';
 import DateTimePicker from '@/lib/pages/components/DateTimePicker';
 import Container from '@/lib/pages/components/Container';
 import { createPoll } from '@/services/vote';
+import { VoteTemplate, voteTemplates, VoteType } from '@/types/voteTypes';
+import { useUserSubscription } from '@/lib/hooks/useUserSubscription';
 
 export default function CreateVote() {
     const navigate = useNavigate();
+    const { subscription } = useUserSubscription();
+    const isPremium = subscription?.type === 'premium';
+    const [selectedTemplate, setSelectedTemplate] = useState<VoteTemplate | null>(null);
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
+    const [location, setLocation] = useState('');
     const [options, setOptions] = useState(['', '']);
     const [tags, setTags] = useState<string[]>([]);
     const [newTag, setNewTag] = useState('');
@@ -42,7 +48,6 @@ export default function CreateVote() {
         }
     };
 
-
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError(null);
@@ -61,46 +66,33 @@ export default function CreateVote() {
                 throw new Error("Both start and end dates are required");
             }
 
-            if (!title || title.length > 200) {
-                throw new Error("Question is required and must be <= 200 characters");
-            }
-
-            if (description.length > 500) {
-                throw new Error("Description must be <= 500 characters");
-            }
-
-            if (options.length < 2 || options.length > 100) {
-                throw new Error("Must have between 2 and 100 options");
-            }
-
-
-            if (tags.length > 50) {
-                throw new Error("Maximum of 50 tags allowed");
-            }
-
-            for (const tag of tags) {
-                if (tag.length > 50) {
-                    throw new Error("Each tag must be <= 50 characters");
+            // Additional validations based on template
+            if (selectedTemplate) {
+                const requiredFields = selectedTemplate.fields.filter(f => f.required);
+                if (selectedTemplate.fields.find(f => f.name === 'location')?.required && !location) {
+                    throw new Error("Location is required for this template");
+                }
+                if (selectedTemplate.fields.find(f => f.name === 'description')?.required && !description) {
+                    throw new Error("Description is required for this template");
                 }
             }
 
-            const pollOptions = options
-                .filter(opt => opt.trim())
-                .map((opt, index) => ({
-                    id: `opt_${index}_${Date.now()}`,
-                    label: opt.trim(),
-                    votes: 0
-                }));
-
-
-            const result = await createPoll(
-                title.trim(),
-                description.trim(),
-                pollOptions,
+            const result = await createPoll({
+                title: title.trim(),
+                description: description.trim(),
+                location,
+                type: selectedTemplate?.id || VoteType.BASIC,
+                options: options
+                    .filter(opt => opt.trim())
+                    .map((opt, index) => ({
+                        id: `opt_${index}_${Date.now()}`,
+                        label: opt.trim(),
+                        votes: 0
+                    })),
                 tags,
-                new Date(startDate).toISOString(),
-                new Date(endDate).toISOString()
-            );
+                startDate: startDate.toISOString(),
+                endDate: endDate.toISOString()
+            });
 
             if (!result?.id) {
                 throw new Error("Poll creation failed - no ID returned");
@@ -109,166 +101,298 @@ export default function CreateVote() {
             navigate(`/votes/history`);
         } catch (err) {
             console.error('Poll creation error:', err);
-            let errorMessage = 'Failed to create poll';
-            if (err instanceof Error) {
-                if (err.message.includes("unexpected end of buffer")) {
-                    errorMessage = "Data format mismatch with server. Please check your inputs.";
-                } else {
-                    errorMessage = err.message;
-                }
-            }
-
-            setError(errorMessage);
+            setError(err instanceof Error ? err.message : 'Failed to create poll');
         } finally {
             setIsSubmitting(false);
         }
     };
 
-    return (
-        <Container>
-            <h1 className="text-xl font-bold mb-6">Create New Voting</h1>
-            {error && (
-                <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
-                    {error}
-                </div>
-            )}
-            <form onSubmit={handleSubmit} className="space-y-6">
-                {/* Title */}
-                <FormInput
-                    label="Voting Title"
-                    id="title"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    required
-                />
+    if (!selectedTemplate) {
+        return (
+            <Container>
+                <div className="max-w-6xl mx-auto">
+                    <div className="text-center mb-8">
+                        <h1 className="text-3xl font-bold text-gray-900 mb-2">Create New Vote</h1>
+                        <p className="text-lg text-gray-600">
+                            {isPremium
+                                ? "Choose from our premium templates to create your vote"
+                                : "Select a template to get started"}
+                        </p>
+                    </div>
 
-                {/* Description */}
-                <div>
-                    <label htmlFor="description" className="block text-sm font-medium text-gray-700">
-                        Description
-                    </label>
-                    <textarea
-                        id="description"
-                        value={description}
-                        onChange={(e) => setDescription(e.target.value)}
-                        rows={3}
-                        className="mt-1 text-sm block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 p-1 border"
-                    />
-                </div>
-
-                {/* Voting Options */}
-                <div>
-                    <label className="block mb-2 text-sm font-medium text-gray-900">Voting Options</label>
-                    {options.map((option, index) => (
-                        <div key={index} className="flex items-center mb-2">
-                            <input
-                                type="text"
-                                value={option}
-                                onChange={(e) => updateOption(index, e.target.value)}
-                                className="flex-1 text-sm py-2 rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 p-1 border"
-                                required
-                            />
-                            {options.length > 2 && (
-                                <button
-                                    type="button"
-                                    onClick={() => removeOption(index)}
-                                    className="ml-2 text-red-500 hover:text-red-700"
-                                >
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="size-6">
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
-                                    </svg>
-                                </button>
-                            )}
-                        </div>
-                    ))}
-                    <button
-                        type="button"
-                        onClick={() => setOptions([...options, ''])}
-                        className="mt-2 text-sm text-orange-600 hover:text-orange-800"
-                    >
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="size-6">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                        </svg>
-                        Add Option
-                    </button>
-                </div>
-
-                {/* Tags */}
-                <div>
-                    <label htmlFor="tags" className="block mb-2 text-sm font-medium text-gray-900">Tags</label>
-                    <div className="flex flex-wrap gap-2 mb-2">
-                        {tags.map(tag => (
-                            <span key={tag} className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
-                                {tag}
-                                <button
-                                    type="button"
-                                    onClick={() => setTags(tags.filter(t => t !== tag))}
-                                    className="ml-1.5 inline-flex text-orange-400 hover:text-orange-600"
-                                >
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="size-6">
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
-                                    </svg>
-
-                                </button>
-                            </span>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {voteTemplates.map((template) => (
+                            <Card
+                                key={template.id}
+                                className={`cursor-pointer transition-all duration-200 hover:shadow-lg hover:-translate-y-1 border-1 hover:border-orange-300 dark:border-orange-50 dark:bg-white
+                                    ${template.isPremium && !isPremium
+                                        ? 'opacity-60 cursor-not-allowed bg-gray-50'
+                                        : 'hover:bg-orange-50'
+                                    }`}
+                                onClick={() => {
+                                    if (!template.isPremium || isPremium) {
+                                        setSelectedTemplate(template);
+                                    }
+                                }}
+                            >
+                                <div className="text-center p-4">
+                                    <div className="text-5xl mb-4">{template.icon}</div>
+                                    <h3 className="text-xl font-bold mb-3 text-gray-900">{template.name}</h3>
+                                    <p className="text-gray-600 text-sm mb-4 leading-relaxed">{template.description}</p>
+                                    <div className="flex justify-center items-center gap-2">
+                                        {template.isPremium ? (
+                                            <span className="bg-gradient-to-r from-orange-400 to-orange-600 text-white text-xs px-3 py-1 rounded-full font-medium">
+                                                Premium
+                                            </span>
+                                        ) : (
+                                            <span className="bg-green-100 text-green-800 text-xs px-3 py-1 rounded-full font-medium">
+                                                Free
+                                            </span>
+                                        )}
+                                    </div>
+                                    {template.isPremium && !isPremium && (
+                                        <div className="mt-2 text-xs text-gray-500">
+                                            Upgrade to unlock
+                                        </div>
+                                    )}
+                                </div>
+                            </Card>
                         ))}
                     </div>
-                    <div className="flex">
-                        <input
-                            type="text"
-                            id="tags"
-                            value={newTag}
-                            onChange={(e) => setNewTag(e.target.value)}
-                            className="flex-1 text-sm py-2 rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 p-1 border"
-                        />
-                        <button
-                            type="button"
-                            onClick={addTag}
-                            className="ml-2 px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-orange-600 hover:bg-orange-700"
-                        >
-                            Add
-                        </button>
+
+                    {!isPremium && (
+                        <div className="mt-12 text-center">
+                            <Card className="bg-gradient-to-r from-orange-50 to-yellow-50 border-orange-200">
+                                <div className="p-6">
+                                    <div className="text-4xl mb-4">🚀</div>
+                                    <h3 className="text-2xl font-bold mb-3 text-gray-900">Unlock Premium Templates</h3>
+                                    <p className="text-gray-600 mb-6 text-lg">
+                                        Get access to advanced voting templates and premium features
+                                    </p>
+                                    <Button
+                                        color="warning"
+                                        size="lg"
+                                        className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white"
+                                        href="/plan"
+                                    >
+                                        Upgrade to Premium
+                                    </Button>
+                                </div>
+                            </Card>
+                        </div>
+                    )}
+                </div>
+            </Container>
+        );
+    }
+
+    return (
+        <Container>
+            <div className="max-w-4xl mx-auto">
+                <Button
+                    color="light"
+                    className="mb-6 dark:bg-white dark:text-orange-900 dark:border-orange-200  dark:hover:border-orange-400 dark:hover:bg-orange-50 transition-colors"
+                    onClick={() => setSelectedTemplate(null)}
+                >
+                    ← Back to Templates
+                </Button>
+
+                <Card className="shadow-lg border-0 dark:bg-orange-50">
+                    <div className="bg-gradient-to-r from-orange-50 to-yellow-50 p-6 rounded-t-lg">
+                        <div className="flex items-center gap-4">
+                            <span className="text-4xl">{selectedTemplate.icon}</span>
+                            <div>
+                                <h2 className="text-2xl font-bold text-gray-900">{selectedTemplate.name}</h2>
+                                <p className="text-gray-600 mt-1">{selectedTemplate.description}</p>
+                            </div>
+                        </div>
                     </div>
-                </div>
 
-                {/* Date and Time */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <DateTimePicker
-                        label="Start Date"
-                        date={startDate}
-                        onDateChange={(date) => {
-                            if (date) setStartDate(date);
-                        }}
-                        time={startTime}
-                        onTimeChange={(e) => setStartTime(e.target.value)}
-                    />
-                    <DateTimePicker
-                        label="End Date"
-                        date={endDate}
-                        onDateChange={(date) => {
-                            if (date) setEndDate(date);
-                        }}
-                        time={endTime}
-                        onTimeChange={(e) => setEndTime(e.target.value)}
-                        minDate={startDate}
-                    />
-                </div>
+                    <div className="p-6">
+                        {error && (
+                            <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg flex items-center gap-2">
+                                <span className="text-red-500">⚠️</span>
+                                {error}
+                            </div>
+                        )}
 
-                {/* Actions */}
-                <div className="flex justify-end space-x-4">
-                    <Link to="/" className="px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
-                        Cancel
-                    </Link>
-                    <button
-                        type="submit"
-                        disabled={isSubmitting}
-                        className={`px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white ${isSubmitting ? 'bg-orange-400' : 'bg-orange-600 hover:bg-orange-700'}`}
-                    >
-                        {isSubmitting ? 'Creating...' : 'Create Voting'}
-                    </button>
-                </div>
-            </form>
+                        <form onSubmit={handleSubmit} className="space-y-8">
+                            {selectedTemplate.fields.map((field) => (
+                                <div key={field.name} className="bg-gray-50 p-4 rounded-lg border border-orange-300">
+                                    <label className="block text-sm font-semibold text-gray-800 mb-3">
+                                        {field.label} {field.required && <span className="text-red-500">*</span>}
+                                    </label>
+
+                                    {field.type === 'text' && (
+                                        <input
+                                            type="text"
+                                            value={field.name === 'question' ? title : ''}
+                                            onChange={(e) => field.name === 'question' ? setTitle(e.target.value) : undefined}
+                                            placeholder={field.placeholder}
+                                            className="w-full p-3 text-sm border border-gray-300 rounded-lg focus:ring-1 focus:ring-orange-500 focus:border-orange-500 bg-white transition-colors"
+                                            required={field.required}
+                                        />
+                                    )}
+
+                                    {field.type === 'description' && (
+                                        <textarea
+                                            value={description}
+                                            onChange={(e) => setDescription(e.target.value)}
+                                            placeholder="Provide additional details about your vote..."
+                                            className="w-full p-3 text-sm border border-gray-300 rounded-lg focus:ring-1 focus:ring-orange-500 focus:border-orange-500 bg-white transition-colors resize-none"
+                                            rows={4}
+                                            required={field.required}
+                                        />
+                                    )}
+
+                                    {field.type === 'location' && (
+                                        <input
+                                            type="text"
+                                            value={location}
+                                            onChange={(e) => setLocation(e.target.value)}
+                                            placeholder="Enter location (e.g., Conference Room A, Online, etc.)"
+                                            className="w-full p-3 text-sm border border-gray-300 rounded-lg focus:ring-1 focus:ring-orange-500 focus:border-orange-500 bg-white transition-colors"
+                                            required={field.required}
+                                        />
+                                    )}
+
+                                    {field.type === 'options' && (
+                                        <div className="space-y-3">
+                                            <div className="text-xs text-gray-600 mb-2">Add at least 2 options for your vote</div>
+                                            {options.map((option, index) => (
+                                                <div key={index} className="flex items-center gap-3">
+                                                    <span className="text-sm font-medium text-gray-500 min-w-[20px]">{index + 1}.</span>
+                                                    <input
+                                                        type="text"
+                                                        value={option}
+                                                        onChange={(e) => updateOption(index, e.target.value)}
+                                                        className="flex-1 p-3 text-sm border border-gray-300 rounded-lg focus:ring-1 focus:ring-orange-500 focus:border-orange-500 bg-white transition-colors"
+                                                        required
+                                                        placeholder={`Option ${index + 1}`}
+                                                    />
+                                                    {options.length > 2 && (
+                                                        <Button
+                                                            color="light"
+                                                            size="sm"
+                                                            className="text-red-600 hover:text-red-800 hover:bg-red-50"
+                                                            onClick={() => removeOption(index)}
+                                                        >
+                                                            Remove
+                                                        </Button>
+                                                    )}
+                                                </div>
+                                            ))}
+                                            <Button
+                                                color="light"
+                                                className="mt-2 border border-1 border-gray-300 hover:border-orange-300 hover:bg-orange-50"
+                                                onClick={() => setOptions([...options, ''])}
+                                            >
+                                                + Add Another Option
+                                            </Button>
+                                        </div>
+                                    )}
+
+                                    {field.type === 'date' && (
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                            <div className="space-y-2">
+                                                <DateTimePicker
+                                                    label="Start"
+                                                    date={startDate}
+                                                    onDateChange={(date) => {
+                                                        if (date) setStartDate(date);
+                                                    }}
+                                                    time={startTime}
+                                                    onTimeChange={(e) => setStartTime(e.target.value)}
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <DateTimePicker
+                                                    label="End"
+                                                    date={endDate}
+                                                    onDateChange={(date) => {
+                                                        if (date) setEndDate(date);
+                                                    }}
+                                                    time={endTime}
+                                                    onTimeChange={(e) => setEndTime(e.target.value)}
+                                                    minDate={startDate}
+                                                />
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            ))}
+
+                            {/* Tags Section */}
+                            <div className="bg-gray-50 p-4 rounded-lg border border-orange-300">
+                                <label className="block text-sm font-semibold text-gray-800 mb-3">
+                                    Tags <span className="text-gray-500 font-normal">(Optional)</span>
+                                </label>
+                                <div className="text-xs text-gray-600 mb-3">Add tags to help categorize and find your vote</div>
+
+                                {tags.length > 0 && (
+                                    <div className="flex flex-wrap gap-2 mb-3">
+                                        {tags.map(tag => (
+                                            <span
+                                                key={tag}
+                                                className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800 border border-orange-200"
+                                            >
+                                                {tag}
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setTags(tags.filter(t => t !== tag))}
+                                                    className="ml-2 text-orange-600 hover:text-orange-800 font-bold"
+                                                >
+                                                    ×
+                                                </button>
+                                            </span>
+                                        ))}
+                                    </div>
+                                )}
+
+                                <div className="flex gap-2">
+                                    <input
+                                        type="text"
+                                        value={newTag}
+                                        onChange={(e) => setNewTag(e.target.value)}
+                                        className="flex-1 p-3 text-sm border border-gray-300 rounded-lg focus:ring-1 focus:ring-orange-500 focus:border-orange-500 bg-white transition-colors"
+                                        placeholder="Type a tag and press Enter"
+                                        onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addTag())}
+                                    />
+                                    <Button
+                                        color="light"
+                                        onClick={addTag}
+                                        disabled={!newTag.trim()}
+                                        className="px-4"
+                                    >
+                                        Add
+                                    </Button>
+                                </div>
+                            </div>
+
+                            <div className="flex justify-between items-center pt-6 border-t">
+                                <Button color="light" as={Link} to="/" className="px-6">
+                                    Cancel
+                                </Button>
+                                <Button
+                                    type="submit"
+                                    color="warning"
+                                    disabled={isSubmitting || !title.trim() || options.filter(opt => opt.trim()).length < 2}
+                                    className="px-8 bg-orange-500 hover:bg-orange-600 text-white"
+                                >
+                                    {isSubmitting ? (
+                                        <>
+                                            <span className="animate-spin mr-2">⏳</span>
+                                            Creating...
+                                        </>
+                                    ) : (
+                                        'Create Vote'
+                                    )}
+                                </Button>
+                            </div>
+                        </form>
+                    </div>
+                </Card>
+            </div>
         </Container>
     );
-
 }

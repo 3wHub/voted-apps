@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { Card, Badge } from 'flowbite-react';
 import Container from '@/lib/pages/components/Container';
 import { getPollsByAgent } from '@/services/vote';
-import { Poll } from '@/services/vote';
+import { Vote, VoteType } from '@/types/voteTypes';
 import { formatDate } from '@/lib/helpers/formatDate';
 
 export default function VotingHistory() {
-    const [polls, setPolls] = useState<Poll[]>([]);
+    const [polls, setPolls] = useState<Vote[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [filter, setFilter] = useState<'all' | 'active' | 'closed'>('all');
@@ -30,8 +31,8 @@ export default function VotingHistory() {
 
     const filteredPolls = polls.filter(poll => {
         const now = new Date();
-        const startDate = new Date(poll.start_date);
-        const endDate = new Date(poll.end_date);
+        const startDate = new Date(poll.startDate);
+        const endDate = new Date(poll.endDate);
         const isActive = now >= startDate && now <= endDate;
 
         if (filter === 'active' && !isActive) return false;
@@ -161,7 +162,7 @@ export default function VotingHistory() {
                                     <div className="flex justify-between items-start mb-2">
                                         <h3 className="text-lg font-medium text-gray-900 line-clamp-2">
                                             <Link to={`/vote/${poll.id}`} className="hover:text-orange-600">
-                                                {poll.question}
+                                                {poll.title}
                                             </Link>
                                         </h3>
                                         <span className={`px-2 py-1 text-xs rounded-full ${true ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
@@ -173,24 +174,24 @@ export default function VotingHistory() {
                                         <svg className="mr-1.5 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                         </svg>
-                                        Created on {formatDate(poll.created_at)}
+                                        Created on {formatDate(poll.createdAt)}
                                     </div>
 
                                     <div className="mb-3">
                                         <div className="flex justify-between text-sm mb-1">
                                             <span>Total votes:</span>
-                                            <span className="font-medium">{poll.total_votes}</span>
+                                            <span className="font-medium">{poll.options.reduce((sum, opt) => sum + opt.votes, 0)}</span>
                                         </div>
                                         <div className="w-full bg-gray-200 rounded-full h-2">
                                             <div
                                                 className="bg-orange-600 h-2 rounded-full"
-                                                style={{ width: `${Math.min(100, (poll.total_votes / 100) * 100)}%` }}
+                                                style={{ width: `${Math.min(100, (poll.options.reduce((sum, opt) => sum + opt.votes, 0) / 100) * 100)}%` }}
                                             ></div>
                                         </div>
                                     </div>
 
                                     <div className="flex flex-wrap gap-1 mb-3">
-                                        {poll.tags.slice(0, 3).map((tag) => (
+                                        {poll.tags.slice(0, 3).map((tag: string) => (
                                             <span key={tag} className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-orange-100 text-orange-800">
                                                 {tag}
                                             </span>

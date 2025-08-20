@@ -90,22 +90,28 @@ export class Votes {
                 created_by: agentId
             };
 
+            // Check limits before creating the poll
+            plan.checkCreatePollLimits(agentId, options, tags);
+
+            // Insert the poll
             this.polls.insert(id, poll);
 
-      plan.checkCreatePollLimits(agentId, options, tags);
-      const existingPollIds = this.agentPolls.get(agentId) ?? [];
-      if (!existingPollIds.includes(id)) {
-        existingPollIds.push(id);
-      }
-      this.agentPolls.insert(agentId, existingPollIds);
+            // Update agent's poll list
+            const existingPollIds = this.agentPolls.get(agentId) ?? [];
+            if (!existingPollIds.includes(id)) {
+                existingPollIds.push(id);
+                this.agentPolls.insert(agentId, existingPollIds);
+            }
 
-      plan.trackPollCreation(agentId, id);
-      return poll;
-    } catch (error) {
-      console.error('Backend poll creation failed:', error);
-      throw error;
+            // Track the creation
+            plan.trackPollCreation(agentId, id);
+
+            return poll;
+        } catch (error) {
+            console.error('Backend poll creation failed:', error);
+            throw error;
+        }
     }
-  }
 
     @query(
         [IDL.Text],
@@ -271,12 +277,12 @@ export class Votes {
             throw new Error('Poll creators cannot vote on their own polls');
         }
 
-    const voterPolls = this.voterRecords.get(voterId) ?? [];
-    if (voterPolls.includes(pollId)) {
-      throw new Error('You have already voted in this poll');
-    }
+        const voterPolls = this.voterRecords.get(voterId) ?? [];
+        if (voterPolls.includes(pollId)) {
+            throw new Error('You have already voted in this poll');
+        }
 
-    plan.trackVote(poll.created_by, agentId);
+        plan.trackVote(poll.created_by, agentId);
 
         const optionIndex = poll.options.findIndex((opt) => opt.id === optionId);
         if (optionIndex === -1) return [];

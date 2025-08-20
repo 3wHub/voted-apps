@@ -1,6 +1,7 @@
 import { createActor, canisterId } from '../../../declarations/backend';
 import { whoAmI } from './auth';
 import { createRobustActor, retryActorCall } from './actor';
+import { Vote, VoteType } from '../types/voteTypes';
 
 const backend = createActor(canisterId);
 
@@ -14,6 +15,7 @@ export type Poll = {
     id: string;
     question: string;
     description: string;
+    type?: VoteType;
     options: PollOption[];
     tags: string[];
     total_votes: number;
@@ -36,31 +38,54 @@ type BackendResponse<T> = [] | [T];
 type BackendOptionalResponse<T> = BackendResponse<T> | undefined | null;
 
 
-export const createPoll = async (
-    question: string,
-    description: string,
-    options: PollOption[],
-    tags: string[],
-    start_date: string,
-    end_date: string,
-): Promise<Poll> => {
+export const createPoll = async (pollData: {
+    title: string;
+    description: string;
+    location?: string;
+    type: VoteType;
+    options: PollOption[];
+    tags: string[];
+    startDate: string;
+    endDate: string;
+}): Promise<Vote> => {
     try {
         const agentId = (await whoAmI()).toString();
 
         if (!agentId) throw new Error('Authentication required');
 
+        // Ensure all required parameters are present and correctly formatted
+        const formattedOptions = pollData.options.map(opt => ({
+            id: opt.id || `opt_${Date.now()}_${Math.random().toString(36).slice(2)}`,
+            label: opt.label,
+            votes: 0
+        }));
+
         const result = await backend.createPoll(
-            question,
-            description,
-            options,
-            tags,
-            start_date,
-            end_date,
+            pollData.title,
+            pollData.description || '',
+            formattedOptions,
+            pollData.tags || [],
+            pollData.startDate,
+            pollData.endDate,
             agentId
         );
 
+
         if (!result.id) throw new Error('Invalid response');
-        return result;
+
+        return {
+            id: result.id,
+            title: result.question,
+            description: result.description,
+            type: pollData.type,
+            options: result.options,
+            tags: result.tags,
+            startDate: result.start_date,
+            endDate: result.end_date,
+            createdAt: result.created_at,
+            creator: result.created_by,
+            status: 'active'
+        };
     } catch (error) {
         throw error;
     }
@@ -107,11 +132,27 @@ export const getAllPolls = async (): Promise<Poll[]> => {
     }
 };
 
-export const getPollsByAgent = async (): Promise<Poll[]> => {
+const convertPollToVote = (poll: Poll): Vote => {
+    return {
+        id: poll.id,
+        title: poll.question,
+        description: poll.description,
+        type: poll.type || VoteType.BASIC,
+        options: poll.options,
+        tags: poll.tags,
+        startDate: poll.start_date,
+        endDate: poll.end_date,
+        createdAt: poll.created_at,
+        creator: poll.created_by,
+        status: 'active'
+    };
+};
+
+export const getPollsByAgent = async (): Promise<Vote[]> => {
     try {
         const agentId = (await whoAmI()).toString();
         const result = await backend.getMyPolls(agentId) as Poll[];
-        return result;
+        return result.map(convertPollToVote);
     } catch (error) {
         return [];
     }
