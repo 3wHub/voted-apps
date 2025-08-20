@@ -7,8 +7,7 @@ export class Votes {
     private polls = new StableBTreeMap<string, Poll>(0);
     private votes = new StableBTreeMap<string, VoteRecord>(1);
     private voterRecords = new StableBTreeMap<string, string[]>(2);
-    private agentPolls = new StableBTreeMap<string, string[]>(3);
-
+    private agentPolls = new StableBTreeMap<string, string[]>(4);
 
     @update(
         [
@@ -91,16 +90,24 @@ export class Votes {
             };
 
             // Check limits before creating the poll
-            plan.checkCreatePollLimits(agentId, options, tags);
+            plan.validateCreatePollLimits(agentId, options, tags);
 
             // Insert the poll
             this.polls.insert(id, poll);
 
             // Update agent's poll list
+            console.log('agentId', agentId);
+            console.log('id', id);
             const existingPollIds = this.agentPolls.get(agentId) ?? [];
+            console.log('existingPollIds', existingPollIds);
+
+            console.log('!existingPollIds.includes(id)', !existingPollIds.includes(id));
             if (!existingPollIds.includes(id)) {
+                console.log('here');
                 existingPollIds.push(id);
+                console.log('after push', existingPollIds);
                 this.agentPolls.insert(agentId, existingPollIds);
+                console.log('after insert', this.agentPolls);
             }
 
             // Track the creation

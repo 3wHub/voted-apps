@@ -15,7 +15,7 @@ export class Plan {
             maxVoters: 100,
         },
         premium: {
-            maxPolls: 1000000, // Using large numbers instead of Infinity for stable serialization
+            maxPolls: 1000000,
             maxOptions: 100,
             maxTags: 50,
             maxVotesPerMonth: 1000000,
@@ -67,20 +67,17 @@ export class Plan {
             throw new Error('You are already on the premium plan');
         }
 
-        // Preserve existing data when upgrading
         const existingResources = this.agentResources.get(agentId) ?? [];
 
         const upgradedPlan: AgentPlan = {
             ...currentPlan,
             plan: 'premium',
             upgradedAt: [new Date().toISOString()],
-            // Preserve existing counts
             voteCount: currentPlan.voteCount,
             voterCount: currentPlan.voterCount,
             lastVoteReset: currentPlan.lastVoteReset
         };
 
-        // Update the plan while preserving existing resources
         this.agentPlans.insert(agentId, upgradedPlan);
         this.agentResources.insert(agentId, existingResources);
 
@@ -105,10 +102,7 @@ export class Plan {
             throw new Error('You are already on the premium plan');
         }
 
-        // Create payment record
         const paymentRecord = coinService.createPaymentRecord(agentId, transactionId);
-
-        // Confirm payment (in a real scenario, this would verify the transaction on the ledger)
         const confirmedPayment = coinService.confirmPayment(paymentRecord.id);
 
         if (confirmedPayment.status !== 'completed') {
@@ -196,12 +190,11 @@ export class Plan {
         this.agentPlans.insert(agentId, updatedPlan);
     }
 
-    checkCreatePollLimits(agentId: string, options: any[], tags: any[]): void {
+    public validateCreatePollLimits(agentId: string, options: any[], tags: any[]): void {
         const agentPlan = this.getAgentPlan(agentId);
         const limits = this.PLAN_LIMITS[agentPlan.plan];
         const agentPolls = this.agentResources.get(agentId) ?? [];
 
-        // Only check poll limit for free plan
         if (agentPlan.plan === 'free' && agentPolls.length >= limits.maxPolls) {
             throw new Error(
                 `Free plan limited to ${limits.maxPolls} polls. Upgrade to premium for unlimited polls.`,

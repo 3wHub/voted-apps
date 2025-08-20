@@ -70,7 +70,6 @@ export const createPoll = async (pollData: {
             agentId
         );
 
-
         if (!result.id) throw new Error('Invalid response');
 
         return {
