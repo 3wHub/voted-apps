@@ -135,10 +135,22 @@ export class Votes {
 
     @query([IDL.Text], IDL.Opt(IDL.Nat32))
     countMyPolls(agentId: string): [] | [number] {
-        const agentPollSet = this.agentPolls.get(agentId);
-        if (!agentPollSet) return [];
+        try {
+            const agentPollSet = this.agentPolls.get(agentId);
+            if (!agentPollSet || !Array.isArray(agentPollSet)) {
+                return [0];
+            }
 
-        return [agentPollSet.length];
+            const count = agentPollSet.length;
+            if (typeof count !== 'number' || isNaN(count) || count < 0) {
+                return [0];
+            }
+
+            return [count];
+        } catch (error) {
+            console.error('Error in countMyPolls:', error);
+            return [0];
+        }
     }
 
     @query(
@@ -342,6 +354,18 @@ export class Votes {
         const poll = this.polls.get(pollId);
         const option = poll?.options.find((opt) => opt.id === optionId);
         return option ? [option.votes] : [];
+    }
+
+    @update([IDL.Text], IDL.Bool)
+    cleanupAgentData(agentId: string): boolean {
+        try {
+            // Reset the agent's poll data to an empty array
+            this.agentPolls.insert(agentId, []);
+            return true;
+        } catch (error) {
+            console.error('Error cleaning up agent data:', error);
+            return false;
+        }
     }
 }
 export const votesInstance = new Votes();

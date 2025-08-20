@@ -1,5 +1,6 @@
 import { IDL, StableBTreeMap, update, query } from 'azle';
 import { AgentPlan, PlanType, PlanLimits, PlanUsage } from '../types';
+import { coinService } from '../coin';
 
 export class Plan {
   private agentPlans = new StableBTreeMap<string, AgentPlan>(0);
@@ -74,6 +75,48 @@ export class Plan {
 
     this.agentPlans.insert(agentId, upgradedPlan);
     return upgradedPlan;
+  }
+
+  @update(
+    [IDL.Text, IDL.Nat64],
+    IDL.Record({
+      plan: IDL.Text,
+      upgradedAt: IDL.Opt(IDL.Text),
+      voteCount: IDL.Nat32,
+      lastVoteReset: IDL.Text,
+      voterCount: IDL.Nat32,
+      paymentId: IDL.Text,
+    }),
+  )
+  upgradeToPremiumWithPayment(agentId: string, transactionId: bigint): AgentPlan & { paymentId: string } {
+    const currentPlan = this.getAgentPlan(agentId);
+
+    if (currentPlan.plan === 'premium') {
+      throw new Error('You are already on the premium plan');
+    }
+
+    // Create payment record
+    const paymentRecord = coinService.createPaymentRecord(agentId, transactionId);
+    
+    // Confirm payment (in a real scenario, this would verify the transaction on the ledger)
+    const confirmedPayment = coinService.confirmPayment(paymentRecord.id);
+    
+    if (confirmedPayment.status !== 'completed') {
+      throw new Error('Payment verification failed');
+    }
+
+    const upgradedPlan: AgentPlan = {
+      ...currentPlan,
+      plan: 'premium',
+      upgradedAt: [new Date().toISOString()],
+    };
+
+    this.agentPlans.insert(agentId, upgradedPlan);
+    
+    return {
+      ...upgradedPlan,
+      paymentId: paymentRecord.id
+    };
   }
 
   @query(
