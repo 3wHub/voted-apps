@@ -98,6 +98,21 @@ export interface _SERVICE {
       }
     >
   >,
+  'getPaymentHistory' : ActorMethod<
+    [string],
+    Array<
+      {
+        'id' : string,
+        'status' : string,
+        'completedAt' : [] | [string],
+        'createdAt' : string,
+        'agentId' : string,
+        'amount' : bigint,
+        'planType' : string,
+        'transactionId' : bigint,
+      }
+    >
+  >,
   'getPlanUsage' : ActorMethod<
     [string],
     {
@@ -175,6 +190,7 @@ export interface _SERVICE {
       }
     >
   >,
+  'getPremiumPlanPrice' : ActorMethod<[], bigint>,
   'getVoteCountForOption' : ActorMethod<[string, string], [] | [number]>,
   'getVotesForPoll' : ActorMethod<
     [string],
@@ -188,15 +204,35 @@ export interface _SERVICE {
       }
     >
   >,
+  'getWalletBalance' : ActorMethod<
+    [string],
+    [] | [{ 'balance' : bigint, 'lastUpdated' : string, 'agentId' : string }]
+  >,
+  'hasSufficientBalance' : ActorMethod<[bigint], boolean>,
   'hasVoted' : ActorMethod<[string, string], boolean>,
   'login' : ActorMethod<[], string>,
   'logout' : ActorMethod<[], string>,
+  'updateWalletBalance' : ActorMethod<
+    [string, bigint],
+    { 'balance' : bigint, 'lastUpdated' : string, 'agentId' : string }
+  >,
   'upgradeToPremium' : ActorMethod<
     [string],
     {
       'voteCount' : number,
       'plan' : string,
       'upgradedAt' : [] | [string],
+      'lastVoteReset' : string,
+      'voterCount' : number,
+    }
+  >,
+  'upgradeToPremiumWithPayment' : ActorMethod<
+    [string, bigint],
+    {
+      'voteCount' : number,
+      'plan' : string,
+      'upgradedAt' : [] | [string],
+      'paymentId' : string,
       'lastVoteReset' : string,
       'voterCount' : number,
     }
