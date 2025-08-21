@@ -12,6 +12,7 @@ type NavLinkItem = {
 const navLinks: NavLinkItem[] = [
     { to: "/", label: "Home" },
     { to: "/about", label: "About" },
+    { to: "/faq", label: "FAQ" },
     { to: "/votes", label: "Votes" },
 ];
 
