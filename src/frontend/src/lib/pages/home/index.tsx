@@ -51,6 +51,7 @@ export default function Home() {
       setError(null);
       try {
         const result = await getAllPolls();
+        console.log("Fetched polls:", result);
         if (isMounted) {
           setPolls(result);
         }

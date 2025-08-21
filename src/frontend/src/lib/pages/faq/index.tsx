@@ -2,7 +2,7 @@ import { useState } from 'react';
 import Container from '@/lib/pages/components/Container';
 
 export default function FAQ() {
-  const [openIndex, setOpenIndex] = useState(null);
+  const [openIndex, setOpenIndex] = useState<number | null>(null);
 
   const faqs = [
     {
@@ -94,4 +94,5 @@ export default function FAQ() {
       </section>
     </Container>
   );
+
 }
