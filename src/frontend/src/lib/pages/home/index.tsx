@@ -51,41 +51,40 @@ export default function Home() {
       setError(null);
       try {
         const result = await getAllPolls();
-        console.log("Fetched polls:", result);
-        if (isMounted) {
-          setPolls(result);
-        }
+        setPolls(result);
       } catch (error) {
-        if (isMounted) {
-          setError(error instanceof Error ? error.message : 'Failed to fetch polls');
-        }
+        setError(error instanceof Error ? error.message : 'Failed to fetch polls');
       } finally {
-        if (isMounted) {
-          setLoading(false);
-        }
+        setLoading(false);
       }
     };
+
 
     fetchPolls();
 
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, []); 
 
   useEffect(() => {
     const checkVotes = async () => {
+      const resultsArray = await Promise.all(
+        polls.map(async (poll) => ({
+          id: poll.id,
+          voted: await hasVoted(poll.id)
+        }))
+      );
       const results: Record<string, boolean> = {};
-
-      for (const poll of polls) {
-        results[poll.id] = await hasVoted(poll.id);
-      }
-
+      resultsArray.forEach(r => results[r.id] = r.voted);
       setVotedPolls(results);
     };
 
-    checkVotes();
+    if (polls.length > 0) {
+      checkVotes();
+    }
   }, [polls]);
+
 
   const allTags = Array.from(new Set(polls.flatMap((poll) => poll.tags)));
 
@@ -241,6 +240,7 @@ export default function Home() {
                 <p className="text-gray-500 text-base">Loading polls...</p>
               </div>
             )}
+
 
             {/* Error State */}
             {error && (

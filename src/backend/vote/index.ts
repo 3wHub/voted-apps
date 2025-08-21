@@ -181,7 +181,7 @@ export class Votes {
             IDL.Record({
                 id: IDL.Text,
                 question: IDL.Text,
-                description: IDL.Text, 
+                description: IDL.Text,
                 options: IDL.Vec(IDL.Record({ id: IDL.Text, label: IDL.Text, votes: IDL.Nat32 })),
                 tags: IDL.Vec(IDL.Text),
                 total_votes: IDL.Nat32,
