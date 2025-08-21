@@ -1,16 +1,20 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import FormInput from '@/lib/pages/components/FormInput';
+import { Card, Button } from 'flowbite-react';
 import DateTimePicker from '@/lib/pages/components/DateTimePicker';
 import Container from '@/lib/pages/components/Container';
 import { createPoll } from '@/services/vote';
-import { FeatureMiddleware } from '@/middleware/feature';
-import { createActor, canisterId } from '../../../../../declarations/backend';
+import { VoteTemplate, voteTemplates, VoteType } from '@/types/voteTypes';
+import { useUserSubscription } from '@/lib/hooks/useUserSubscription';
 
 export default function CreateVote() {
     const navigate = useNavigate();
+    const { subscription } = useUserSubscription();
+    const isPremium = subscription?.type === 'premium';
+    const [selectedTemplate, setSelectedTemplate] = useState<VoteTemplate | null>(null);
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
+    const [location, setLocation] = useState('');
     const [options, setOptions] = useState(['', '']);
     const [tags, setTags] = useState<string[]>([]);
     const [newTag, setNewTag] = useState('');
@@ -110,46 +114,33 @@ export default function CreateVote() {
                 throw new Error("Both start and end dates are required");
             }
 
-            if (title.length > 200) {
-                throw new Error("Question must be <= 200 characters");
-            }
-
-            if (description.length > 500) {
-                throw new Error("Description must be <= 500 characters");
-            }
-
-            for (const tag of tags) {
-                if (tag.length > 50) {
-                    throw new Error("Each tag must be <= 50 characters");
+            // Additional validations based on template
+            if (selectedTemplate) {
+                const requiredFields = selectedTemplate.fields.filter(f => f.required);
+                if (selectedTemplate.fields.find(f => f.name === 'location')?.required && !location) {
+                    throw new Error("Location is required for this template");
+                }
+                if (selectedTemplate.fields.find(f => f.name === 'description')?.required && !description) {
+                    throw new Error("Description is required for this template");
                 }
             }
 
-            await featureMiddleware.validatePollCreation({
-                showPercentage,
-                isPrivate,
-                isSensitive,
-                useTemplate,
-                icpIntegration: icpIntegration ? { enabled: true } : { enabled: false },
-                optionsCount: options.length,
-                tagsCount: tags.length
-            });
-
-            const pollOptions = options
-                .filter(opt => opt.trim())
-                .map((opt, index) => ({
-                    id: `opt_${index}_${Date.now()}`,
-                    label: opt.trim(),
-                    votes: 0
-                }));
-
-            const result = await createPoll(
-                title.trim(),
-                description.trim(),
-                pollOptions,
+            const result = await createPoll({
+                title: title.trim(),
+                description: description.trim(),
+                location,
+                type: selectedTemplate?.id || VoteType.BASIC,
+                options: options
+                    .filter(opt => opt.trim())
+                    .map((opt, index) => ({
+                        id: `opt_${index}_${Date.now()}`,
+                        label: opt.trim(),
+                        votes: 0
+                    })),
                 tags,
-                new Date(startDate).toISOString(),
-                new Date(endDate).toISOString()
-            );
+                startDate: startDate.toISOString(),
+                endDate: endDate.toISOString()
+            });
 
             if (!result?.id) {
                 throw new Error("Poll creation failed - no ID returned");
@@ -158,22 +149,86 @@ export default function CreateVote() {
             navigate(`/votes/history`);
         } catch (err) {
             console.error('Poll creation error:', err);
-            let errorMessage = 'Failed to create poll';
-            if (err instanceof Error) {
-                errorMessage = err.message;
-            }
-            setError(errorMessage);
+            setError(err instanceof Error ? err.message : 'Failed to create poll');
         } finally {
             setIsSubmitting(false);
         }
     };
 
-    // Show loading state while features are being loaded
-    if (isLoading || !availableFeatures || !featureMiddleware) {
+    if (!selectedTemplate) {
         return (
             <Container>
-                <div className="flex justify-center items-center py-8">
-                    <div className="text-gray-500">Loading features...</div>
+                <div className="max-w-6xl mx-auto">
+                    <div className="text-center mb-8">
+                        <h1 className="text-3xl font-bold text-gray-900 mb-2">Create New Vote</h1>
+                        <p className="text-lg text-gray-600">
+                            {isPremium
+                                ? "Choose from our premium templates to create your vote"
+                                : "Select a template to get started"}
+                        </p>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {voteTemplates.map((template) => (
+                            <Card
+                                key={template.id}
+                                className={`cursor-pointer transition-all duration-200 hover:shadow-lg hover:-translate-y-1 border-1 hover:border-orange-300 dark:border-orange-50 dark:bg-white
+                                    ${template.isPremium && !isPremium
+                                        ? 'opacity-60 cursor-not-allowed bg-gray-50'
+                                        : 'hover:bg-orange-50'
+                                    }`}
+                                onClick={() => {
+                                    if (!template.isPremium || isPremium) {
+                                        setSelectedTemplate(template);
+                                    }
+                                }}
+                            >
+                                <div className="text-center p-4">
+                                    <div className="text-5xl mb-4">{template.icon}</div>
+                                    <h3 className="text-xl font-bold mb-3 text-gray-900">{template.name}</h3>
+                                    <p className="text-gray-600 text-sm mb-4 leading-relaxed">{template.description}</p>
+                                    <div className="flex justify-center items-center gap-2">
+                                        {template.isPremium ? (
+                                            <span className="bg-gradient-to-r from-orange-400 to-orange-600 text-white text-xs px-3 py-1 rounded-full font-medium">
+                                                Premium
+                                            </span>
+                                        ) : (
+                                            <span className="bg-green-100 text-green-800 text-xs px-3 py-1 rounded-full font-medium">
+                                                Free
+                                            </span>
+                                        )}
+                                    </div>
+                                    {template.isPremium && !isPremium && (
+                                        <div className="mt-2 text-xs text-gray-500">
+                                            Upgrade to unlock
+                                        </div>
+                                    )}
+                                </div>
+                            </Card>
+                        ))}
+                    </div>
+
+                    {!isPremium && (
+                        <div className="mt-12 text-center">
+                            <Card className="bg-gradient-to-r from-orange-50 to-yellow-50 border-orange-200">
+                                <div className="p-6">
+                                    <div className="text-4xl mb-4">🚀</div>
+                                    <h3 className="text-2xl font-bold mb-3 text-gray-900">Unlock Premium Templates</h3>
+                                    <p className="text-gray-600 mb-6 text-lg">
+                                        Get access to advanced voting templates and premium features
+                                    </p>
+                                    <Button
+                                        color="warning"
+                                        size="lg"
+                                        className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white"
+                                        href="/plan"
+                                    >
+                                        Upgrade to Premium
+                                    </Button>
+                                </div>
+                            </Card>
+                        </div>
+                    )}
                 </div>
             </Container>
         );
@@ -181,283 +236,211 @@ export default function CreateVote() {
 
     return (
         <Container>
-            {/* Header with Premium Badge */}
-            <div className="flex items-center justify-between mb-6">
-                <h1 className="text-xl font-bold">Create New Voting</h1>
-                {availableFeatures.hasPremiumBadge && (
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                        ✨ Premium
-                    </span>
-                )}
-            </div>
+            <div className="max-w-4xl mx-auto">
+                <Button
+                    color="light"
+                    className="mb-6 dark:bg-white dark:text-orange-900 dark:border-orange-200  dark:hover:border-orange-400 dark:hover:bg-orange-50 transition-colors"
+                    onClick={() => setSelectedTemplate(null)}
+                >
+                    ← Back to Templates
+                </Button>
 
-            {/* Plan Usage Information */}
-            <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                <div className="text-sm text-blue-700">
-                    <div className="flex flex-wrap gap-4">
-                        <span><strong>Plan:</strong> {availableFeatures.planInfo.plan}</span>
-                        <span><strong>Polls:</strong> {availableFeatures.usage.currentPolls}/{availableFeatures.usage.maxPolls === 0 ? 'Unlimited' : availableFeatures.usage.maxPolls}</span>
-                        <span><strong>Monthly Votes:</strong> {availableFeatures.usage.currentVotesThisMonth}/{availableFeatures.usage.maxVotesPerMonth === 0 ? 'Unlimited' : availableFeatures.usage.maxVotesPerMonth}</span>
-                    </div>
-                </div>
-            </div>
-
-            {error && (
-                <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
-                    {error}
-                </div>
-            )}
-
-            <form onSubmit={handleSubmit} className="space-y-6">
-                {/* Premium Features Section */}
-                <div className="bg-gray-50 p-4 rounded-lg border">
-                    <h3 className="text-sm font-medium text-gray-900 mb-3">Poll Settings</h3>
-                    <div className="space-y-3">
-                        {/* Show Percentage Toggle */}
-                        <div className="flex items-center">
-                            <input
-                                id="showPercentage"
-                                type="checkbox"
-                                checked={showPercentage}
-                                onChange={(e) => {
-                                    if (!e.target.checked && !availableFeatures.canHidePercentage) {
-                                        setError('Hide vote percentages is a Premium feature. Please upgrade your plan.');
-                                        return;
-                                    }
-                                    setShowPercentage(e.target.checked);
-                                    setError(null);
-                                }}
-                                className="h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded"
-                            />
-                            <label htmlFor="showPercentage" className="ml-2 block text-sm text-gray-900">
-                                Show vote percentages
-                                {!availableFeatures.canHidePercentage && (
-                                    <span className="text-yellow-600 text-xs ml-1">(Premium required to hide)</span>
-                                )}
-                            </label>
-                        </div>
-
-                        {/* Private Poll */}
-                        <div className="flex items-center">
-                            <input
-                                id="isPrivate"
-                                type="checkbox"
-                                checked={isPrivate}
-                                onChange={(e) => {
-                                    if (e.target.checked && !availableFeatures.canCreatePrivateVotes) {
-                                        setError('Private polls are a Premium feature. Please upgrade your plan.');
-                                        return;
-                                    }
-                                    setIsPrivate(e.target.checked);
-                                    setError(null);
-                                }}
-                                disabled={!availableFeatures.canCreatePrivateVotes}
-                                className="h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded disabled:opacity-50"
-                            />
-                            <label htmlFor="isPrivate" className="ml-2 block text-sm text-gray-900">
-                                Private poll (accessible only via link)
-                                {!availableFeatures.canCreatePrivateVotes && (
-                                    <span className="text-yellow-600 text-xs ml-1">✨ Premium feature</span>
-                                )}
-                            </label>
-                        </div>
-
-                        {/* Sensitive Content */}
-                        <div className="flex items-center">
-                            <input
-                                id="isSensitive"
-                                type="checkbox"
-                                checked={isSensitive}
-                                onChange={(e) => {
-                                    if (e.target.checked && !availableFeatures.canCreateSensitiveContent) {
-                                        setError('Sensitive content polls are a Premium feature. Please upgrade your plan.');
-                                        return;
-                                    }
-                                    setIsSensitive(e.target.checked);
-                                    setError(null);
-                                }}
-                                disabled={!availableFeatures.canCreateSensitiveContent}
-                                className="h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded disabled:opacity-50"
-                            />
-                            <label htmlFor="isSensitive" className="ml-2 block text-sm text-gray-900">
-                                Sensitive content (requires content warning)
-                                {!availableFeatures.canCreateSensitiveContent && (
-                                    <span className="text-yellow-600 text-xs ml-1">✨ Premium feature</span>
-                                )}
-                            </label>
+                <Card className="shadow-lg border-0 dark:bg-orange-50">
+                    <div className="bg-gradient-to-r from-orange-50 to-yellow-50 p-6 rounded-t-lg">
+                        <div className="flex items-center gap-4">
+                            <span className="text-4xl">{selectedTemplate.icon}</span>
+                            <div>
+                                <h2 className="text-2xl font-bold text-gray-900">{selectedTemplate.name}</h2>
+                                <p className="text-gray-600 mt-1">{selectedTemplate.description}</p>
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                {/* Title */}
-                <FormInput
-                    label="Voting Title"
-                    id="title"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    required
-                    // maxLength={200}
-                />
-
-                {/* Description */}
-                <div>
-                    <label htmlFor="description" className="block text-sm font-medium text-gray-700">
-                        Description
-                    </label>
-                    <textarea
-                        id="description"
-                        value={description}
-                        onChange={(e) => setDescription(e.target.value)}
-                        rows={3}
-                        maxLength={500}
-                        className="mt-1 text-sm block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 p-1 border"
-                    />
-                    <div className="text-xs text-gray-500 mt-1">
-                        {description.length}/500 characters
-                    </div>
-                </div>
-
-                {/* Voting Options */}
-                <div>
-                    <label className="block mb-2 text-sm font-medium text-gray-900">
-                        Voting Options (Max: {availableFeatures.usage.maxOptions || 'Loading...'})
-                    </label>
-                    {options.map((option, index) => (
-                        <div key={index} className="flex items-center mb-2">
-                            <input
-                                type="text"
-                                value={option}
-                                onChange={(e) => updateOption(index, e.target.value)}
-                                className="flex-1 text-sm py-2 rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 p-1 border"
-                                required
-                                maxLength={100}
-                                placeholder={`Option ${index + 1}`}
-                            />
-                            {options.length > 2 && (
-                                <button
-                                    type="button"
-                                    onClick={() => removeOption(index)}
-                                    className="ml-2 text-red-500 hover:text-red-700"
-                                >
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="size-6">
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
-                                    </svg>
-                                </button>
-                            )}
-                        </div>
-                    ))}
-                    <button
-                        type="button"
-                        onClick={addOption}
-                        disabled={availableFeatures && options.length >= availableFeatures.usage.maxOptions}
-                        className="mt-2 text-sm text-orange-600 hover:text-orange-800 disabled:text-gray-400 disabled:cursor-not-allowed flex items-center"
-                    >
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="size-6 mr-1">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                        </svg>
-                        Add Option
-                        {availableFeatures && options.length >= availableFeatures.usage.maxOptions && (
-                            <span className="text-xs text-gray-500 ml-1">(Limit reached)</span>
+                    <div className="p-6">
+                        {error && (
+                            <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg flex items-center gap-2">
+                                <span className="text-red-500">⚠️</span>
+                                {error}
+                            </div>
                         )}
-                    </button>
-                </div>
 
-                {/* Tags */}
-                <div>
-                    <label htmlFor="tags" className="block mb-2 text-sm font-medium text-gray-900">
-                        Tags (Max: {availableFeatures.usage.maxTags || 'Loading...'})
-                    </label>
-                    <div className="flex flex-wrap gap-2 mb-2">
-                        {tags.map(tag => (
-                            <span key={tag} className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
-                                {tag}
-                                <button
-                                    type="button"
-                                    onClick={() => setTags(tags.filter(t => t !== tag))}
-                                    className="ml-1.5 inline-flex text-orange-400 hover:text-orange-600"
+                        <form onSubmit={handleSubmit} className="space-y-8">
+                            {selectedTemplate.fields.map((field) => (
+                                <div key={field.name} className="bg-gray-50 p-4 rounded-lg border border-orange-300">
+                                    <label className="block text-sm font-semibold text-gray-800 mb-3">
+                                        {field.label} {field.required && <span className="text-red-500">*</span>}
+                                    </label>
+
+                                    {field.type === 'text' && (
+                                        <input
+                                            type="text"
+                                            value={field.name === 'question' ? title : ''}
+                                            onChange={(e) => field.name === 'question' ? setTitle(e.target.value) : undefined}
+                                            placeholder={field.placeholder}
+                                            className="w-full p-3 text-sm border border-gray-300 rounded-lg focus:ring-1 focus:ring-orange-500 focus:border-orange-500 bg-white transition-colors"
+                                            required={field.required}
+                                        />
+                                    )}
+
+                                    {field.type === 'description' && (
+                                        <textarea
+                                            value={description}
+                                            onChange={(e) => setDescription(e.target.value)}
+                                            placeholder="Provide additional details about your vote..."
+                                            className="w-full p-3 text-sm border border-gray-300 rounded-lg focus:ring-1 focus:ring-orange-500 focus:border-orange-500 bg-white transition-colors resize-none"
+                                            rows={4}
+                                            required={field.required}
+                                        />
+                                    )}
+
+                                    {field.type === 'location' && (
+                                        <input
+                                            type="text"
+                                            value={location}
+                                            onChange={(e) => setLocation(e.target.value)}
+                                            placeholder="Enter location (e.g., Conference Room A, Online, etc.)"
+                                            className="w-full p-3 text-sm border border-gray-300 rounded-lg focus:ring-1 focus:ring-orange-500 focus:border-orange-500 bg-white transition-colors"
+                                            required={field.required}
+                                        />
+                                    )}
+
+                                    {field.type === 'options' && (
+                                        <div className="space-y-3">
+                                            <div className="text-xs text-gray-600 mb-2">Add at least 2 options for your vote</div>
+                                            {options.map((option, index) => (
+                                                <div key={index} className="flex items-center gap-3">
+                                                    <span className="text-sm font-medium text-gray-500 min-w-[20px]">{index + 1}.</span>
+                                                    <input
+                                                        type="text"
+                                                        value={option}
+                                                        onChange={(e) => updateOption(index, e.target.value)}
+                                                        className="flex-1 p-3 text-sm border border-gray-300 rounded-lg focus:ring-1 focus:ring-orange-500 focus:border-orange-500 bg-white transition-colors"
+                                                        required
+                                                        placeholder={`Option ${index + 1}`}
+                                                    />
+                                                    {options.length > 2 && (
+                                                        <Button
+                                                            color="light"
+                                                            size="sm"
+                                                            className="text-red-600 hover:text-red-800 hover:bg-red-50"
+                                                            onClick={() => removeOption(index)}
+                                                        >
+                                                            Remove
+                                                        </Button>
+                                                    )}
+                                                </div>
+                                            ))}
+                                            <Button
+                                                color="light"
+                                                className="mt-2 border border-1 border-gray-300 hover:border-orange-300 hover:bg-orange-50"
+                                                onClick={() => setOptions([...options, ''])}
+                                            >
+                                                + Add Another Option
+                                            </Button>
+                                        </div>
+                                    )}
+
+                                    {field.type === 'date' && (
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                            <div className="space-y-2">
+                                                <DateTimePicker
+                                                    label="Start"
+                                                    date={startDate}
+                                                    onDateChange={(date) => {
+                                                        if (date) setStartDate(date);
+                                                    }}
+                                                    time={startTime}
+                                                    onTimeChange={(e) => setStartTime(e.target.value)}
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <DateTimePicker
+                                                    label="End"
+                                                    date={endDate}
+                                                    onDateChange={(date) => {
+                                                        if (date) setEndDate(date);
+                                                    }}
+                                                    time={endTime}
+                                                    onTimeChange={(e) => setEndTime(e.target.value)}
+                                                    minDate={startDate}
+                                                />
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            ))}
+
+                            {/* Tags Section */}
+                            <div className="bg-gray-50 p-4 rounded-lg border border-orange-300">
+                                <label className="block text-sm font-semibold text-gray-800 mb-3">
+                                    Tags <span className="text-gray-500 font-normal">(Optional)</span>
+                                </label>
+                                <div className="text-xs text-gray-600 mb-3">Add tags to help categorize and find your vote</div>
+
+                                {tags.length > 0 && (
+                                    <div className="flex flex-wrap gap-2 mb-3">
+                                        {tags.map(tag => (
+                                            <span
+                                                key={tag}
+                                                className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800 border border-orange-200"
+                                            >
+                                                {tag}
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setTags(tags.filter(t => t !== tag))}
+                                                    className="ml-2 text-orange-600 hover:text-orange-800 font-bold"
+                                                >
+                                                    ×
+                                                </button>
+                                            </span>
+                                        ))}
+                                    </div>
+                                )}
+
+                                <div className="flex gap-2">
+                                    <input
+                                        type="text"
+                                        value={newTag}
+                                        onChange={(e) => setNewTag(e.target.value)}
+                                        className="flex-1 p-3 text-sm border border-gray-300 rounded-lg focus:ring-1 focus:ring-orange-500 focus:border-orange-500 bg-white transition-colors"
+                                        placeholder="Type a tag and press Enter"
+                                        onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addTag())}
+                                    />
+                                    <Button
+                                        color="light"
+                                        onClick={addTag}
+                                        disabled={!newTag.trim()}
+                                        className="px-4"
+                                    >
+                                        Add
+                                    </Button>
+                                </div>
+                            </div>
+
+                            <div className="flex justify-between items-center pt-6 border-t">
+                                <Button color="light" as={Link} to="/" className="px-6">
+                                    Cancel
+                                </Button>
+                                <Button
+                                    type="submit"
+                                    color="warning"
+                                    disabled={isSubmitting || !title.trim() || options.filter(opt => opt.trim()).length < 2}
+                                    className="px-8 bg-orange-500 hover:bg-orange-600 text-white"
                                 >
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="size-4">
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
-                                    </svg>
-                                </button>
-                            </span>
-                        ))}
+                                    {isSubmitting ? (
+                                        <>
+                                            <span className="animate-spin mr-2">⏳</span>
+                                            Creating...
+                                        </>
+                                    ) : (
+                                        'Create Vote'
+                                    )}
+                                </Button>
+                            </div>
+                        </form>
                     </div>
-                    <div className="flex">
-                        <input
-                            type="text"
-                            id="tags"
-                            value={newTag}
-                            onChange={(e) => setNewTag(e.target.value)}
-                            maxLength={50}
-                            placeholder="Enter a tag"
-                            className="flex-1 text-sm py-2 rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 p-1 border"
-                        />
-                        <button
-                            type="button"
-                            onClick={addTag}
-                            disabled={(availableFeatures && tags.length >= availableFeatures.usage.maxTags) || !newTag.trim()}
-                            className="ml-2 px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-orange-600 hover:bg-orange-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
-                        >
-                            Add
-                        </button>
-                    </div>
-                </div>
-
-                {/* Date and Time */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <DateTimePicker
-                        label="Start Date"
-                        date={startDate}
-                        onDateChange={(date) => {
-                            if (date) setStartDate(date);
-                        }}
-                        time={startTime}
-                        onTimeChange={(e) => setStartTime(e.target.value)}
-                    />
-                    <DateTimePicker
-                        label="End Date"
-                        date={endDate}
-                        onDateChange={(date) => {
-                            if (date) setEndDate(date);
-                        }}
-                        time={endTime}
-                        onTimeChange={(e) => setEndTime(e.target.value)}
-                        minDate={startDate}
-                    />
-                </div>
-
-                {/* Upgrade Prompt for Free Users */}
-                {availableFeatures.planInfo.plan === 'free' && (
-                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                        <h3 className="text-sm font-medium text-yellow-800 mb-2">✨ Upgrade to Premium</h3>
-                        <p className="text-sm text-yellow-700 mb-3">
-                            Unlock private polls, hide percentages, sensitive content, templates, ICP integration, and unlimited features!
-                        </p>
-                        <button
-                            type="button"
-                            className="text-sm bg-yellow-600 text-white px-3 py-1 rounded hover:bg-yellow-700"
-                            onClick={() => navigate('/premium')}
-                        >
-                            Learn More →
-                        </button>
-                    </div>
-                )}
-
-                {/* Actions */}
-                <div className="flex justify-end space-x-4">
-                    <Link to="/" className="px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
-                        Cancel
-                    </Link>
-                    <button
-                        type="submit"
-                        disabled={isSubmitting}
-                        className={`px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white ${isSubmitting ? 'bg-orange-400 cursor-not-allowed' : 'bg-orange-600 hover:bg-orange-700'}`}
-                    >
-                        {isSubmitting ? 'Creating...' : 'Create Voting'}
-                    </button>
-                </div>
-            </form>
+                </Card>
+            </div>
         </Container>
     );
 }

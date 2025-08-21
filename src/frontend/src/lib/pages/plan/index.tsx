@@ -28,8 +28,6 @@ export default function Plan() {
       ]);
       setCurrentPlan(planInfo);
       setPlanUsage(usageInfo);
-      console.log('Plan Info:', planInfo);
-      console.log('Plan Usage:', usageInfo);
     } catch (err) {
       console.error('Failed to fetch plan data:', err);
       setError('Failed to load plan information');
@@ -45,7 +43,7 @@ export default function Plan() {
     setSuccessMessage(`Successfully upgraded to Premium! Payment ID: ${result.paymentId}`);
     setCurrentPlan(result);
     setShowWalletUpgrade(false);
-    
+
     // Add a small delay to ensure backend state is updated
     setTimeout(async () => {
       await fetchPlanData();
@@ -167,8 +165,8 @@ export default function Plan() {
             <div
               key={index}
               className={`bg-white p-8 rounded-xl shadow-md border ${
-                plan.highlight 
-                  ? 'border-orange-500 ring-2 ring-orange-200 transform md:-translate-y-2' 
+                plan.highlight
+                  ? 'border-orange-500 ring-2 ring-orange-200 transform md:-translate-y-2'
                   : 'border-gray-100'
               }`}
             >
@@ -297,7 +295,7 @@ export default function Plan() {
                   </svg>
                 </button>
               </div>
-              
+
               <div className="mb-4">
                 <p className="text-sm text-gray-600">
                   Pay with your ICP wallet balance to upgrade to Premium and unlock all features.

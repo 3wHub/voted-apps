@@ -87,9 +87,9 @@ export default function DashboardHeader({ onToggleSidebar, isSidebarOpen }: Dash
                         <div className="relative">
                             <button
                                 onClick={() => setShowProfileMenu(!showProfileMenu)}
-                                className="flex items-center space-x-3 text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-orange-500"
+                                className="flex items-center space-x-3 text-sm rounded-full"
                             >
-                                <div className="flex items-center space-x-2">
+                                <div className="flex items-center md:space-x-2">
                                     <div className="w-8 h-8 bg-gradient-to-r from-orange-400 to-pink-400 rounded-full flex items-center justify-center">
                                         <span className="text-white text-sm font-medium">
                                             {principal?.toString().slice(0, 2).toUpperCase() || 'U'}

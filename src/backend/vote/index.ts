@@ -7,8 +7,7 @@ export class Votes {
     private polls = new StableBTreeMap<string, Poll>(0);
     private votes = new StableBTreeMap<string, VoteRecord>(1);
     private voterRecords = new StableBTreeMap<string, string[]>(2);
-    private agentPolls = new StableBTreeMap<string, string[]>(3);
-
+    private agentPolls = new StableBTreeMap<string, string[]>(4);
 
     @update(
         [
@@ -90,16 +89,23 @@ export class Votes {
                 created_by: agentId
             };
 
+            // Check limits before creating the poll
+            plan.validateCreatePollLimits(agentId, options, tags);
+
+            // Insert the poll
             this.polls.insert(id, poll);
 
-            plan.checkCreatePollLimits(agentId, options, tags);
+            // Update agent's poll list
             const existingPollIds = this.agentPolls.get(agentId) ?? [];
+
             if (!existingPollIds.includes(id)) {
                 existingPollIds.push(id);
+                this.agentPolls.insert(agentId, existingPollIds);
             }
-            this.agentPolls.insert(agentId, existingPollIds);
 
+            // Track the creation
             plan.trackPollCreation(agentId, id);
+
             return poll;
         } catch (error) {
             console.error('Backend poll creation failed:', error);
