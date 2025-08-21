@@ -156,6 +156,15 @@ export const getPollsByAgent = async (): Promise<Vote[]> => {
         return [];
     }
 };
+export const getVotedPolls = async (): Promise<Poll[]> => {
+    try {
+        const agentId = (await whoAmI()).toString();
+        const result = await backend.getVotedPolls(agentId) as Poll[];
+        return result;
+    } catch (error) {
+        return [];
+    }
+};
 
 export const countPollsByAgent = async (): Promise<number> => {
     try {

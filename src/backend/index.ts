@@ -81,6 +81,11 @@ export default class VotingBackend {
         return votesInstance.getPollsByAgent(agentId);
     }
 
+    @query([IDL.Text], IDL.Vec(PollsIdl))
+    getVotedPolls(agentId: string): Poll[] {
+        return votesInstance.getVotedPolls(agentId);
+    }
+
     @query([IDL.Text], IDL.Opt(IDL.Nat32))
     countMyPolls(agentId: string): [] | [number] {
         return votesInstance.countMyPolls(agentId);
@@ -242,11 +247,13 @@ export const idlFactory = ({ IDL }: { IDL: IDLType }) => {
     getPoll: IDL.Func([IDL.Text], [IDL.Opt(PollsIdl)], ['query']),
     getPollsByTag: IDL.Func([IDL.Text], [IDL.Vec(PollsIdl)], ['query']),
     getPollsByAgent: IDL.Func([IDL.Text], [IDL.Vec(PollsIdl)], ['query']),
-    castVote: IDL.Func([IDL.Text, IDL.Text], [IDL.Opt(PollsIdl)], ['update']),
+    getVotedPolls: IDL.Func([IDL.Text], [IDL.Vec(PollsIdl)], ['query']),
+    countMyPolls: IDL.Func([IDL.Text], [IDL.Opt(IDL.Nat32)], ['query']),
+    castVote: IDL.Func([IDL.Text, IDL.Text, IDL.Text], [IDL.Opt(PollsIdl)], ['update']),
     getVotesForPoll: IDL.Func([IDL.Text], [IDL.Vec(VoteRecordIdl)], ['query']),
     getPollOptions: IDL.Func([IDL.Text], [IDL.Opt(IDL.Vec(PollOptionIdl))], ['query']),
     getVoteCountForOption: IDL.Func([IDL.Text, IDL.Text], [IDL.Opt(IDL.Nat32)], ['query']),
-    hasVoted: IDL.Func([IDL.Text], [IDL.Bool], ['query']),
+    hasVoted: IDL.Func([IDL.Text, IDL.Text], [IDL.Bool], ['query']),
 
     upgradeToPremium: IDL.Func([IDL.Text], [
       IDL.Record({

@@ -3,6 +3,8 @@ import { useEffect, useState } from 'react';
 import Container from '@/lib/pages/components/Container';
 import { getPoll, castVote, hasVoted } from '@/services/vote';
 import { whoAmI } from '@/services/auth';
+import { FeatureMiddleware } from '@/middleware/feature';
+import { createActor, canisterId } from '../../../../../declarations/backend';
 
 interface PollOption {
   id: string;
@@ -29,6 +31,9 @@ export default function DetailVote() {
   const [userHasVoted, setUserHasVoted] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [isCreator, setIsCreator] = useState(false);
+  
+  const [featureMiddleware, setFeatureMiddleware] = useState<FeatureMiddleware | null>(null);
+  const [canUserVote, setCanUserVote] = useState(true);
 
   useEffect(() => {
     if (!id) return;
@@ -44,12 +49,18 @@ export default function DetailVote() {
         setCurrentUserId(userId);
         
         if (userId) {
+          const actor = createActor(canisterId);
+          const middleware = new FeatureMiddleware(actor);
+          setFeatureMiddleware(middleware);
+
           const [hasVotedResult] = await Promise.all([
             hasVoted(id),
           ]);
           
           setUserHasVoted(hasVotedResult);
           setIsCreator(data?.created_by === userId);
+
+          await checkVotingLimits(middleware);
         }
       } catch (err) {
         console.error('Failed to fetch poll:', err);
@@ -61,14 +72,44 @@ export default function DetailVote() {
     fetchPollAndUserStatus();
   }, [id]);
 
+  const checkVotingLimits = async (middleware: FeatureMiddleware) => {
+    try {
+      const features = await middleware.getAvailableFeatures();
+      
+      if (features.planInfo.plan === 'free') {
+        const usage = features.usage;
+        
+        if (usage.currentVoters >= 100) {
+          setCanUserVote(false);
+          return;
+        }
+       
+      }
+
+      setCanUserVote(true);
+      
+    } catch (error) {
+      console.error('Error checking voting limits:', error);
+      setCanUserVote(true);
+    }
+  };
+
   const handleVote = async (optionId: string) => {
-    if (!id || !currentUserId) return;
+    if (!id || !currentUserId || !featureMiddleware) return;
     
     try {
+      await checkVotingLimits(featureMiddleware);
+      
+      if (!canUserVote) {
+        return; 
+      }
+
       const updatedPoll = await castVote(id, optionId);
       if (updatedPoll) {
         setPoll(updatedPoll);
         setUserHasVoted(true);
+        
+        await checkVotingLimits(featureMiddleware);
       }
     } catch (err) {
       console.error('Failed to cast vote:', err);
@@ -95,14 +136,12 @@ export default function DetailVote() {
     );
   }
 
-  const canVote = currentUserId && !userHasVoted && !isCreator;
+  const canVote = currentUserId && !userHasVoted && !isCreator && canUserVote;
 
   return (
     <Container>
       <div className="block p-6 mb-5 border border-gray-200 rounded-lg shadow-sm bg-white">
         <span className="text-sm text-gray-500">
-          {/* TODO: add view range start and end time to vote */}
-          
           Created: {new Date(poll.created_at).toLocaleDateString()}
         </span>
         <div className="flex justify-between items-start mb-4">
@@ -138,11 +177,23 @@ export default function DetailVote() {
                   ></div>
                 </div>
               </div>
+              
               {canVote && (
                 <div className="px-4 pb-3">
                   <button
                     onClick={() => handleVote(option.id)}
                     className="w-full py-1 text-sm text-blue-600 hover:text-blue-800"
+                  >
+                    Vote for this option
+                  </button>
+                </div>
+              )}
+              
+              {currentUserId && !userHasVoted && !isCreator && !canUserVote && (
+                <div className="px-4 pb-3">
+                  <button
+                    disabled
+                    className="w-full py-1 text-sm text-gray-400 cursor-not-allowed"
                   >
                     Vote for this option
                   </button>

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Card, Button } from 'flowbite-react';
 import DateTimePicker from '@/lib/pages/components/DateTimePicker';
@@ -29,6 +29,37 @@ export default function CreateVote() {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
+    const [showPercentage, setShowPercentage] = useState(true);
+    const [isPrivate, setIsPrivate] = useState(false);
+    const [isSensitive, setIsSensitive] = useState(false);
+    const [useTemplate, setUseTemplate] = useState(false);
+    const [icpIntegration, setIcpIntegration] = useState(false);
+
+    const [availableFeatures, setAvailableFeatures] = useState<any>(null);
+    const [featureMiddleware, setFeatureMiddleware] = useState<FeatureMiddleware | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        const initializeMiddleware = async () => {
+            try {
+                setIsLoading(true);
+                const actor = createActor(canisterId);
+                const middleware = new FeatureMiddleware(actor);
+                setFeatureMiddleware(middleware);
+
+                const features = await middleware.getAvailableFeatures();
+                setAvailableFeatures(features);
+            } catch (error) {
+                console.error('Error initializing middleware:', error);
+                setError('Failed to initialize features. Please refresh the page.');
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        initializeMiddleware();
+    }, []);
+
     const updateOption = (index: number, value: string) => {
         const updated = [...options];
         updated[index] = value;
@@ -40,9 +71,21 @@ export default function CreateVote() {
         setOptions(options.filter((_, i) => i !== index));
     };
 
+    const addOption = () => {
+        if (availableFeatures && options.length >= availableFeatures.usage.maxOptions) {
+            setError(`You can only add up to ${availableFeatures.usage.maxOptions} options with your current plan.`);
+            return;
+        }
+        setOptions([...options, '']);
+    };
+
     const addTag = () => {
         const trimmed = newTag.trim();
         if (trimmed && !tags.includes(trimmed)) {
+            if (availableFeatures && tags.length >= availableFeatures.usage.maxTags) {
+                setError(`You can only add up to ${availableFeatures.usage.maxTags} tags with your current plan.`);
+                return;
+            }
             setTags([...tags, trimmed]);
             setNewTag('');
         }
@@ -54,6 +97,11 @@ export default function CreateVote() {
         setIsSubmitting(true);
 
         try {
+            if (!featureMiddleware) {
+                throw new Error("Feature middleware not initialized. Please refresh the page.");
+            }
+
+            // Basic validation
             if (!title.trim()) {
                 throw new Error("Poll title cannot be empty");
             }

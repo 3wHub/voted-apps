@@ -193,6 +193,26 @@ export interface _SERVICE {
   >,
   'getPremiumPlanPrice' : ActorMethod<[], bigint>,
   'getVoteCountForOption' : ActorMethod<[string, string], [] | [number]>,
+  'getVotedPolls' : ActorMethod<
+    [string],
+    Array<
+      {
+        'id' : string,
+        'updated_at' : string,
+        'question' : string,
+        'tags' : Array<string>,
+        'description' : string,
+        'end_date' : string,
+        'created_at' : string,
+        'created_by' : string,
+        'start_date' : string,
+        'total_votes' : number,
+        'options' : Array<
+          { 'id' : string, 'votes' : number, 'label' : string }
+        >,
+      }
+    >
+  >,
   'getVotesForPoll' : ActorMethod<
     [string],
     Array<
