@@ -286,56 +286,6 @@ export default function CreateVote() {
                                 )}
                             </label>
                         </div>
-
-                        {/* Template Usage */}
-                        <div className="flex items-center">
-                            <input
-                                id="useTemplate"
-                                type="checkbox"
-                                checked={useTemplate}
-                                onChange={(e) => {
-                                    if (e.target.checked && !availableFeatures.canUseTemplates) {
-                                        setError('Voting templates are a Premium feature. Please upgrade your plan.');
-                                        return;
-                                    }
-                                    setUseTemplate(e.target.checked);
-                                    setError(null);
-                                }}
-                                disabled={!availableFeatures.canUseTemplates}
-                                className="h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded disabled:opacity-50"
-                            />
-                            <label htmlFor="useTemplate" className="ml-2 block text-sm text-gray-900">
-                                Use voting template
-                                {!availableFeatures.canUseTemplates && (
-                                    <span className="text-yellow-600 text-xs ml-1">✨ Premium feature</span>
-                                )}
-                            </label>
-                        </div>
-
-                        {/* ICP Integration */}
-                        <div className="flex items-center">
-                            <input
-                                id="icpIntegration"
-                                type="checkbox"
-                                checked={icpIntegration}
-                                onChange={(e) => {
-                                    if (e.target.checked && !availableFeatures.canUseICPIntegration) {
-                                        setError('ICP coin integration is a Premium feature. Please upgrade your plan.');
-                                        return;
-                                    }
-                                    setIcpIntegration(e.target.checked);
-                                    setError(null);
-                                }}
-                                disabled={!availableFeatures.canUseICPIntegration}
-                                className="h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded disabled:opacity-50"
-                            />
-                            <label htmlFor="icpIntegration" className="ml-2 block text-sm text-gray-900">
-                                Enable ICP coin integration
-                                {!availableFeatures.canUseICPIntegration && (
-                                    <span className="text-yellow-600 text-xs ml-1">✨ Premium feature</span>
-                                )}
-                            </label>
-                        </div>
                     </div>
                 </div>
 
