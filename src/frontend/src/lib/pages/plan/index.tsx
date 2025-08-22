@@ -78,7 +78,7 @@ export default function Plan() {
     {
       name: "Premium",
       id: "premium",
-      price: "$4.99",
+      price: "1 ICP",
       period: "/month",
       description: "For power users and organizations",
       features: [
