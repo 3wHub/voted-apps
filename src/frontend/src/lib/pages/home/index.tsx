@@ -33,42 +33,48 @@ const sortOptions: { value: SortOptionValue; label: string }[] = [
 ];
 
 export default function Home() {
-  const { isLoggedIn, handleLogin } = useAuth();
+  const { isLoggedIn, loading: authLoading, handleLogin } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [dateFilter, setDateFilter] = useState('');
   const [sortBy, setSortBy] = useState<SortOptionValue>("newest");
   const [polls, setPolls] = useState<Poll[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [dataLoading, setDataLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [votedPolls, setVotedPolls] = useState<Record<string, boolean>>({});
+  const [hasFetchedData, setHasFetchedData] = useState(false);
+
+  const loading = authLoading || dataLoading;
 
   useEffect(() => {
-    let isMounted = true;
+    if (!authLoading && !hasFetchedData) {
+      fetchPolls();
+      setHasFetchedData(true);
+    }
+  }, [authLoading, hasFetchedData]);
 
-    const fetchPolls = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const result = await getAllPolls();
-        setPolls(result);
-      } catch (error) {
-        setError(error instanceof Error ? error.message : 'Failed to fetch polls');
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchPolls = async () => {
+    setDataLoading(true);
+    setError(null);
+    try {
+      const result = await getAllPolls();
+      setPolls(result);
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Failed to fetch polls');
+    } finally {
+      setDataLoading(false);
 
+    }
+  };
 
-    fetchPolls();
-
-    return () => {
-      isMounted = false;
-    };
-  }, []); 
 
   useEffect(() => {
     const checkVotes = async () => {
+      if (!isLoggedIn) {
+        setVotedPolls({});
+        return;
+      }
+
       const resultsArray = await Promise.all(
         polls.map(async (poll) => ({
           id: poll.id,
@@ -83,8 +89,12 @@ export default function Home() {
     if (polls.length > 0) {
       checkVotes();
     }
-  }, [polls]);
+  }, [polls, isLoggedIn]);
 
+  const handleRefresh = () => {
+    setHasFetchedData(false);
+    setError(null);
+  };
 
   const allTags = Array.from(new Set(polls.flatMap((poll) => poll.tags)));
 

@@ -16,11 +16,16 @@ export function useAuth(): AuthHookReturn {
 
     useEffect(() => {
         async function checkAuth() {
-            await initAuthClient();
-            const authenticated = await isAuthenticated();
-            setIsLoggedIn(authenticated);
-            setPrincipal(authenticated ? getPrincipal()?.toString() || null : null);
-            setLoading(false);
+            try {
+                await initAuthClient();
+                const authenticated = await isAuthenticated();
+                setIsLoggedIn(authenticated);
+                setPrincipal(authenticated ? getPrincipal()?.toString() || null : null);
+            } catch (error) {
+                console.error("Auth initialization failed:", error);
+            } finally {
+                setLoading(false);
+            }
         }
         checkAuth();
     }, []);
@@ -29,12 +34,12 @@ export function useAuth(): AuthHookReturn {
         setLoading(true);
         try {
             await login();
-            setIsLoggedIn(true);
-            setPrincipal(getPrincipal()?.toString() || null);
-            // Redirect to dashboard after successful login
-            window.location.href = '/dashboard';
+            const authenticated = await isAuthenticated();
+            setIsLoggedIn(authenticated);
+            setPrincipal(authenticated ? getPrincipal()?.toString() || null : null);
         } catch (error) {
             console.error("Login failed:", error);
+            throw error;
         } finally {
             setLoading(false);
         }
@@ -46,13 +51,19 @@ export function useAuth(): AuthHookReturn {
             await logout();
             setIsLoggedIn(false);
             setPrincipal(null);
-            window.location.reload();
         } catch (error) {
             console.error("Logout failed:", error);
+            throw error;
         } finally {
             setLoading(false);
         }
     };
 
-    return { isLoggedIn, loading, principal, handleLogin, handleLogout };
+    return { 
+        isLoggedIn, 
+        loading, 
+        principal, 
+        handleLogin, 
+        handleLogout
+    };
 }

@@ -6,6 +6,8 @@ import Container from '@/lib/pages/components/Container';
 import { createPoll } from '@/services/vote';
 import { VoteTemplate, voteTemplates, VoteType } from '@/types/voteTypes';
 import { useUserSubscription } from '@/lib/hooks/useUserSubscription';
+import { FeatureMiddleware } from '@/middleware/feature';
+import { canisterId, createActor } from '../../../../../declarations/backend';
 
 export default function CreateVote() {
     const navigate = useNavigate();
