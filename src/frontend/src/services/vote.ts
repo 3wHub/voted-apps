@@ -52,8 +52,6 @@ export const createPoll = async (pollData: {
         const agentId = (await whoAmI()).toString();
 
         if (!agentId) throw new Error('Authentication required');
-
-        // Ensure all required parameters are present and correctly formatted
         const formattedOptions = pollData.options.map(opt => ({
             id: opt.id || `opt_${Date.now()}_${Math.random().toString(36).slice(2)}`,
             label: opt.label,

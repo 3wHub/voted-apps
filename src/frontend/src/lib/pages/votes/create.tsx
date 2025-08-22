@@ -34,8 +34,13 @@ export default function CreateVote() {
     const [showPercentage, setShowPercentage] = useState(true);
     const [isPrivate, setIsPrivate] = useState(false);
     const [isSensitive, setIsSensitive] = useState(false);
-    const [useTemplate, setUseTemplate] = useState(false);
-    const [icpIntegration, setIcpIntegration] = useState(false);
+    const [privateLink, setPrivateLink] = useState('');
+    const [contentWarning, setContentWarning] = useState('');
+    const [icpIntegration, setIcpIntegration] = useState({
+        enabled: false,
+        tokenAmount: 0,
+        walletAddress: ''
+    });
 
     const [availableFeatures, setAvailableFeatures] = useState<any>(null);
     const [featureMiddleware, setFeatureMiddleware] = useState<FeatureMiddleware | null>(null);
@@ -74,6 +79,11 @@ export default function CreateVote() {
     };
 
     const addOption = () => {
+
+        if (!isPremium && options.length >= 3) {
+            setError("Free plan is limited to 3 options. Upgrade to Premium for more options.");
+            return;
+        }
         if (availableFeatures && options.length >= availableFeatures.usage.maxOptions) {
             setError(`You can only add up to ${availableFeatures.usage.maxOptions} options with your current plan.`);
             return;
@@ -84,6 +94,11 @@ export default function CreateVote() {
     const addTag = () => {
         const trimmed = newTag.trim();
         if (trimmed && !tags.includes(trimmed)) {
+            if (!isPremium && tags.length >= 2) {
+                setError("Free plan is limited to 2 tags. Upgrade to Premium for more tags.");
+                return;
+            }
+
             if (availableFeatures && tags.length >= availableFeatures.usage.maxTags) {
                 setError(`You can only add up to ${availableFeatures.usage.maxTags} tags with your current plan.`);
                 return;
@@ -162,8 +177,8 @@ export default function CreateVote() {
             <Container>
                 <div className="max-w-6xl mx-auto">
                     <div className="text-center mb-8">
-                        <h1 className="text-3xl font-bold text-gray-900 mb-2">Create New Vote</h1>
-                        <p className="text-lg text-gray-600">
+                        <h1 className="text-3xl font-bold text-gray-900 text-base mb-2">Create New Vote</h1>
+                        <p className="text-base text-gray-600 ">
                             {isPremium
                                 ? "Choose from our premium templates to create your vote"
                                 : "Select a template to get started"}
@@ -187,8 +202,8 @@ export default function CreateVote() {
                             >
                                 <div className="text-center p-4">
                                     <div className="text-5xl mb-4">{template.icon}</div>
-                                    <h3 className="text-xl font-bold mb-3 text-gray-900">{template.name}</h3>
-                                    <p className="text-gray-600 text-sm mb-4 leading-relaxed">{template.description}</p>
+                                    <h3 className="text-xl font-bold mb-3 text-gray-900 text-base">{template.name}</h3>
+                                    <p className="text-gray-600  text-sm mb-4 leading-relaxed">{template.description}</p>
                                     <div className="flex justify-center items-center gap-2">
                                         {template.isPremium ? (
                                             <span className="bg-gradient-to-r from-orange-400 to-orange-600 text-white text-xs px-3 py-1 rounded-full font-medium">
@@ -215,8 +230,8 @@ export default function CreateVote() {
                             <Card className="bg-gradient-to-r from-orange-50 to-yellow-50 border-orange-200">
                                 <div className="p-6">
                                     <div className="text-4xl mb-4">🚀</div>
-                                    <h3 className="text-2xl font-bold mb-3 text-gray-900">Unlock Premium Templates</h3>
-                                    <p className="text-gray-600 mb-6 text-lg">
+                                    <h3 className="text-2xl font-bold mb-3 text-gray-900 text-base">Unlock Premium Templates</h3>
+                                    <p className="text-gray-600  mb-6 text-base">
                                         Get access to advanced voting templates and premium features
                                     </p>
                                     <Button
@@ -252,9 +267,26 @@ export default function CreateVote() {
                         <div className="flex items-center gap-4">
                             <span className="text-4xl">{selectedTemplate.icon}</span>
                             <div>
-                                <h2 className="text-2xl font-bold text-gray-900">{selectedTemplate.name}</h2>
-                                <p className="text-gray-600 mt-1">{selectedTemplate.description}</p>
+                                <h2 className="text-2xl font-bold text-gray-900 text-base">{selectedTemplate.name}</h2>
+                                <p className="text-gray-600  mt-1">{selectedTemplate.description}</p>
                             </div>
+                        </div>
+                    </div>
+
+                    {/* Usage Limits Info */}
+                    <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                        <h4 className="font-medium text-blue-900 mb-2">Your Current Limits</h4>
+                        <div className="text-sm text-blue-800 space-y-1">
+                            <div>• {availableFeatures.usage.currentVotesThisMonth}/5 votes this month</div>
+                            <div>• {availableFeatures.usage.currentVoters}/100 total voters</div>
+                            <div>• {availableFeatures.usage.currentPolls}/{availableFeatures.usage.maxPolls} polls</div>
+                            <div>• {options.length}/{isPremium ? availableFeatures.usage.maxOptions : 3} options</div>
+                            <div>• {tags.length}/{isPremium ? availableFeatures.usage.maxTags : 2} tags</div>
+                            {!isPremium && (
+                                <div className="text-orange-600 font-medium mt-2">
+                                    Upgrade to Premium for higher limits!
+                                </div>
+                            )}
                         </div>
                     </div>
 
@@ -265,6 +297,8 @@ export default function CreateVote() {
                                 {error}
                             </div>
                         )}
+
+
 
                         <form onSubmit={handleSubmit} className="space-y-8">
                             {selectedTemplate.fields.map((field) => (
@@ -308,7 +342,14 @@ export default function CreateVote() {
 
                                     {field.type === 'options' && (
                                         <div className="space-y-3">
-                                            <div className="text-xs text-gray-600 mb-2">Add at least 2 options for your vote</div>
+                                            <div className="text-xs text-gray-600  mb-2">Add at least 2 options for your vote
+                                                {!isPremium && (
+                                                    <span className="ml-2 text-orange-600">
+                                                        (Free plan limit: 3 options)
+                                                    </span>
+                                                )}
+                                            </div>
+
                                             {options.map((option, index) => (
                                                 <div key={index} className="flex items-center gap-3">
                                                     <span className="text-sm font-medium text-gray-500 min-w-[20px]">{index + 1}.</span>
@@ -339,6 +380,7 @@ export default function CreateVote() {
                                             >
                                                 + Add Another Option
                                             </Button>
+
                                         </div>
                                     )}
 
@@ -377,7 +419,13 @@ export default function CreateVote() {
                                 <label className="block text-sm font-semibold text-gray-800 mb-3">
                                     Tags <span className="text-gray-500 font-normal">(Optional)</span>
                                 </label>
-                                <div className="text-xs text-gray-600 mb-3">Add tags to help categorize and find your vote</div>
+                                <div className="text-xs text-gray-600  mb-3">Add tags to help categorize and find your vote
+                                    {!isPremium && (
+                                        <span className="ml-2 text-orange-600">
+                                            (Free plan limit: 2 tags)
+                                        </span>
+                                    )}
+                                </div>
 
                                 {tags.length > 0 && (
                                     <div className="flex flex-wrap gap-2 mb-3">
@@ -418,6 +466,130 @@ export default function CreateVote() {
                                     </Button>
                                 </div>
                             </div>
+
+                            {/* Premium Features Section */}
+                            {availableFeatures && (
+                                <div className="bg-gray-50 p-6 rounded-lg border border-orange-300">
+                                    <h3 className="text-base font-bold text-gray-900 text-base mb-4 flex items-center gap-2">
+                                        <span className="bg-gradient-to-r from-orange-400 to-orange-600 text-white text-xs px-3 py-1 rounded-full">
+                                            Premium Features
+                                        </span>
+                                    </h3>
+
+                                    {/* Show/Hide Percentage */}
+                                    <div className="mb-4 p-4 bg-white rounded-lg border border-gray-200">
+                                        <label className="flex items-center gap-3 cursor-pointer">
+                                            <input
+                                                type="checkbox"
+                                                checked={showPercentage}
+                                                onChange={(e) => {
+                                                    if (!e.target.checked && !availableFeatures.canHidePercentage) {
+                                                        setError("Hiding vote percentage is a Premium feature. Upgrade to unlock.");
+                                                        return;
+                                                    }
+                                                    setShowPercentage(e.target.checked);
+                                                }}
+                                                className="w-4 h-4 text-orange-600 rounded focus:ring-orange-500"
+                                                disabled={!availableFeatures.canHidePercentage && !showPercentage}
+                                            />
+                                            <div>
+                                                <span className="font-medium text-gray-900 text-base">Show vote percentage</span>
+                                                <p className="text-sm text-gray-600  mt-1">
+                                                    {showPercentage ? 'Voters will see percentage results' : 'Vote results will be hidden from voters'}
+                                                </p>
+                                            </div>
+                                        </label>
+                                        {!availableFeatures.canHidePercentage && (
+                                            <div className="mt-2 text-xs text-orange-600">
+                                                ✨ Premium feature - <Link to="/plan" className="underline">Upgrade to unlock</Link>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Private Vote */}
+                                    <div className="mb-4 p-4 bg-white rounded-lg border border-gray-200">
+                                        <label className="flex items-center gap-3 cursor-pointer">
+                                            <input
+                                                type="checkbox"
+                                                checked={isPrivate}
+                                                onChange={(e) => {
+                                                    if (e.target.checked && !availableFeatures.canCreatePrivateVotes) {
+                                                        setError("Private voting is a Premium feature. Upgrade to unlock.");
+                                                        return;
+                                                    }
+                                                    setIsPrivate(e.target.checked);
+                                                }}
+                                                className="w-4 h-4 text-orange-600 rounded focus:ring-orange-500"
+                                                disabled={!availableFeatures.canCreatePrivateVotes && !isPrivate}
+                                            />
+                                            <div>
+                                                <span className="font-medium text-gray-900 text-base">Private vote</span>
+                                                <p className="text-sm text-gray-600  mt-1">
+                                                    {isPrivate ? 'Only people with the private link can vote' : 'Vote will be public'}
+                                                </p>
+                                            </div>
+                                        </label>
+                                        {isPrivate && availableFeatures.canCreatePrivateVotes && (
+                                            <div className="mt-3 p-3 bg-orange-50 rounded-lg">
+                                                <span className="text-sm text-orange-800">
+                                                    🔒 Private link will be generated after creation
+                                                </span>
+                                            </div>
+                                        )}
+                                        {!availableFeatures.canCreatePrivateVotes && (
+                                            <div className="mt-2 text-xs text-orange-600">
+                                                ✨ Premium feature - <Link to="/plan" className="underline">Upgrade to unlock</Link>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Sensitive Content */}
+                                    <div className="mb-4 p-4 bg-white rounded-lg border border-gray-200">
+                                        <label className="flex items-center gap-3 cursor-pointer">
+                                            <input
+                                                type="checkbox"
+                                                checked={isSensitive}
+                                                onChange={(e) => {
+                                                    if (e.target.checked && !availableFeatures.canCreateSensitiveContent) {
+                                                        setError("Sensitive content polls are a Premium feature. Upgrade to unlock.");
+                                                        return;
+                                                    }
+                                                    setIsSensitive(e.target.checked);
+                                                }}
+                                                className="w-4 h-4 text-orange-600 rounded focus:ring-orange-500"
+                                                disabled={!availableFeatures.canCreateSensitiveContent && !isSensitive}
+                                            />
+                                            <div>
+                                                <span className="font-medium text-gray-900 text-base">Sensitive content</span>
+                                                <p className="text-sm text-gray-600  mt-1">
+                                                    Mark this poll as containing sensitive material
+                                                </p>
+                                            </div>
+                                        </label>
+                                        {isSensitive && (
+                                            <div className="mt-3">
+                                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                                    Content warning
+                                                </label>
+                                                <input
+                                                    type="text"
+                                                    value={contentWarning}
+                                                    onChange={(e) => setContentWarning(e.target.value)}
+                                                    placeholder="Describe the sensitive content..."
+                                                    className="w-full p-2 text-sm border border-gray-300 rounded-lg"
+                                                />
+                                            </div>
+                                        )}
+                                        {!availableFeatures.canCreateSensitiveContent && (
+                                            <div className="mt-2 text-xs text-orange-600">
+                                                ✨ Premium feature - <Link to="/plan" className="underline">Upgrade to unlock</Link>
+                                            </div>
+                                        )}
+                                    </div>
+
+
+                                </div>
+                            )}
 
                             <div className="flex justify-between items-center pt-6 border-t">
                                 <Button color="light" as={Link} to="/" className="px-6">
